@@ -1,20 +1,21 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import "react-native-gesture-handler";
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import RootNavigator from "./src/navigation/RootNavigator";
+import { HospitalProvider } from "./src/context/HospitalContext";
+import { QueueProvider } from "./src/context/QueueContext";
+import { FeedbackProvider } from "./src/context/FeedbackContext";
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <FeedbackProvider>
+    <HospitalProvider>
+      <QueueProvider>
+    <NavigationContainer>
+      <RootNavigator />
+    </NavigationContainer>
+    </QueueProvider>
+    </HospitalProvider>
+    </FeedbackProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

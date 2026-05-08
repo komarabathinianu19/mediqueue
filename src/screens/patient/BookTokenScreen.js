@@ -903,8 +903,8 @@ export default function BookTokenScreen({ route, navigation }) {
   const [doctor, setDoctor] = useState(firstDoctorName);
   const [selectedSlot, setSelectedSlot] = useState("morning");
 
-  const [name, setName] = useState("Ravi Kumar");
-  const [age, setAge] = useState("28");
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
   const [symptoms, setSymptoms] = useState("");
   const [visitType, setVisitType] = useState("New Patient");
 

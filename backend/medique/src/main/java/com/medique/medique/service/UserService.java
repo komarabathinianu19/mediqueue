@@ -1,81 +1,83 @@
-package com.medique.medique.service;
 
+
+
+
+package com.medique.medique.service;
 
 import com.medique.medique.dto.AuthRequest;
 import com.medique.medique.dto.AuthResponse;
 import com.medique.medique.dto.RegisterRequest;
 import com.medique.medique.entity.Patient;
 import com.medique.medique.entity.User;
-import com.medique.medique.entity.User.Role;
 import com.medique.medique.repository.PatientRepository;
 import com.medique.medique.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import com.medique.medique.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository;
-    private final PatientRepository patientRepository;
+    private final UserRepository userRepo;
+    private final PatientRepository patientRepo;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final JwtUtil jwtUtil;
 
-    @Transactional
+    public UserService(UserRepository userRepo,
+                       PatientRepository patientRepo,
+                       PasswordEncoder passwordEncoder,
+                       JwtUtil jwtUtil) {
+        this.userRepo = userRepo;
+        this.patientRepo = patientRepo;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+    }
+
+    // ── REGISTER ──
     public AuthResponse register(RegisterRequest req) {
-        if (req.getEmail() != null && userRepository.existsByEmail(req.getEmail())) {
-            throw new IllegalArgumentException("Email already in use");
-        }
-        if (req.getPhone() != null && userRepository.existsByPhone(req.getPhone())) {
-            throw new IllegalArgumentException("Phone already in use");
-        }
+        if (userRepo.existsByEmail(req.getEmail()))
+            throw new RuntimeException("Email already registered.");
 
         User user = User.builder()
+                .name(req.getName())
                 .email(req.getEmail())
                 .phone(req.getPhone())
                 .password(passwordEncoder.encode(req.getPassword()))
-                .role(req.getRole())
+                .role("PATIENT")
                 .build();
+        user = userRepo.save(user);
 
-        userRepository.save(user);
+        Patient patient = Patient.builder()
+                .fullName(req.getName())
+                .email(req.getEmail())
+                .phone(req.getPhone())
+                .age(req.getAge())
+                .gender(req.getGender())
+                .bloodGroup(req.getBloodGroup())
+                .city(req.getCity())
+                .allergies(req.getAllergies())
+                .medicalNotes(req.getMedicalNotes())
+                .emergencyContact(req.getEmergencyContact())
+                .user(user)
+                .build();
+        patientRepo.save(patient);
 
-        // Auto-create Patient profile if role is PATIENT
-        if (req.getRole() == Role.PATIENT) {
-            Patient patient = Patient.builder()
-                    .user(user)
-                    .fullName(req.getFullName())
-                    .age(req.getAge())
-                    .gender(req.getGender())
-                    .bloodGroup(req.getBloodGroup())
-                    .city(req.getCity())
-                    .allergies(req.getAllergies())
-                    .medicalNotes(req.getMedicalNotes())
-                    .emergencyContact(req.getEmergencyContact())
-                    .build();
-            patientRepository.save(patient);
-        }
-
-        String token = jwtService.generateToken(user.getId(), user.getRole().name());
-        return new AuthResponse(token, user.getRole().name());
+        // FIXED: Passing userId (Long) and role (String)
+        String token = jwtUtil.generateToken(user.getId(), user.getRole());
+        return new AuthResponse(token, user.getId(), user.getRole());
     }
 
+    // ── LOGIN ──
     public AuthResponse login(AuthRequest req) {
-        User user = userRepository.findByEmail(req.getIdentifier())
-                .or(() -> userRepository.findByPhone(req.getIdentifier()))
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user = userRepo.findByEmail(req.getIdentifier())
+                .or(() -> userRepo.findByPhone(req.getIdentifier()))
+                .orElseThrow(() -> new RuntimeException("User not found."));
 
-        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Invalid credentials");
-        }
+        if (!passwordEncoder.matches(req.getPassword(), user.getPassword()))
+            throw new RuntimeException("Incorrect password.");
 
-        String token = jwtService.generateToken(user.getId(), user.getRole().name());
-        return new AuthResponse(token, user.getRole().name());
-    }
-
-    public User getById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+        // FIXED: Passing userId (Long) and role (String)
+        String token = jwtUtil.generateToken(user.getId(), user.getRole());
+        return new AuthResponse(token, user.getId(), user.getRole());
     }
 }

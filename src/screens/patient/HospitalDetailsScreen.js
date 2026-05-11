@@ -3,6 +3,8 @@
 
 
 
+
+
 // import React from "react";
 // import {
 //   View,
@@ -17,13 +19,24 @@
 // import { COLORS } from "../../constants/colors";
 // import { useQueue } from "../../context/QueueContext";
 
+// const departmentImages = {
+//   "General OPD": require("../../../assets/departments/generalopd.jpg"),
+//   Cardiology: require("../../../assets/departments/cardiology.jpg"),
+//   Pediatrics: require("../../../assets/departments/pediatrics.jpg"),
+//   ENT: require("../../../assets/departments/ent.jpg")
+
+// };
+
 // const doctorMap = {
 //   "General OPD": ["Dr. Sandeep", "Dr. Ramesh"],
 //   Cardiology: ["Dr. Rao", "Dr. Kavitha"],
 //   Pediatrics: ["Dr. Meena", "Dr. John"],
 //   Ortho: ["Dr. Kiran", "Dr. Vivek"],
 //   Dental: ["Dr. Neha", "Dr. Arjun"],
+//   ENT: ["Dr. Sameer Khan"],
 // };
+
+// const getTodayDate = () => new Date().toISOString().split("T")[0];
 
 // export default function HospitalDetailsScreen({ navigation, route }) {
 //   const hospital = route?.params?.hospital;
@@ -34,19 +47,35 @@
 //       ? hospital.departments
 //       : ["General OPD"];
 
+//   const getDoctors = (department) => {
+//     const hospitalDoctors = hospital?.doctorList || [];
+//     const filtered = hospitalDoctors.filter((doc) => doc.department === department);
+
+//     if (filtered.length > 0) return filtered;
+
+//     return (doctorMap[department] || ["Any Available"]).map((name) => ({
+//       id: name,
+//       name,
+//       department,
+//       qualification: department,
+//       fee: 500,
+//     }));
+//   };
+
 //   const getQueueStats = (department, doctor) => {
-//     const queue = tokens.filter(
+//     const todayQueue = tokens.filter(
 //       (t) =>
 //         t.hospitalId === hospital?.id &&
 //         t.department === department &&
 //         t.doctor === doctor &&
+//         t.date === getTodayDate() &&
 //         (t.status === "waiting" || t.status === "serving")
 //     );
 
 //     return {
-//       active: queue.length,
-//       waiting: queue.filter((t) => t.status === "waiting").length,
-//       serving: queue.find((t) => t.status === "serving")?.tokenNo || "None",
+//       active: todayQueue.length,
+//       waiting: todayQueue.filter((t) => t.status === "waiting").length,
+//       serving: todayQueue.find((t) => t.status === "serving")?.tokenNo || "None",
 //     };
 //   };
 
@@ -80,44 +109,43 @@
 //       <View style={styles.content}>
 //         <Text style={styles.section}>Select Department & Doctor</Text>
 //         <Text style={styles.sectionSub}>
-//           Tap any doctor to view live queue and book appointment
+//           Tap any doctor to view Morning, Afternoon and Night live queue.
 //         </Text>
 
 //         {departments.map((department) => {
-//           const doctors = doctorMap[department] || ["Any Available"];
+//           const doctors = getDoctors(department);
+//           const deptImage =
+//             departmentImages[department] || departmentImages["General OPD"];
 
 //           return (
 //             <View key={department} style={styles.departmentBlock}>
 //               <View style={styles.departmentHeader}>
-//                 <View>
-//                   <Text style={styles.departmentTitle}>{department}</Text>
-//                   <Text style={styles.departmentSub}>
-//                     {doctors.length} doctor(s) available
-//                   </Text>
-//                 </View>
+//                 <View style={styles.departmentLeft}>
+//                   <Image source={deptImage } style={styles.departmentImage} />
 
-//                 <View style={styles.departmentIcon}>
-//                   <Ionicons
-//                     name="git-branch-outline"
-//                     size={20}
-//                     color={COLORS.primary}
-//                   />
+//                   <View style={{ flex: 1 }}>
+//                     <Text style={styles.departmentTitle}>{department}</Text>
+//                     <Text style={styles.departmentSub}>
+//                       {doctors.length} doctor(s) available
+//                     </Text>
+//                   </View>
 //                 </View>
 //               </View>
 
-//               {doctors.map((doctor) => {
-//                 const stats = getQueueStats(department, doctor);
+//               {doctors.map((doctorItem) => {
+//                 const doctorName = doctorItem.name || doctorItem;
+//                 const stats = getQueueStats(department, doctorName);
 
 //                 return (
 //                   <TouchableOpacity
-//                     key={`${department}-${doctor}`}
+//                     key={`${department}-${doctorName}`}
 //                     style={styles.doctorCard}
 //                     activeOpacity={0.86}
 //                     onPress={() =>
 //                       navigation.navigate("DoctorLiveQueue", {
 //                         hospital,
 //                         department,
-//                         doctor,
+//                         doctor: doctorName,
 //                       })
 //                     }
 //                   >
@@ -130,16 +158,17 @@
 //                     </View>
 
 //                     <View style={{ flex: 1 }}>
-//                       <Text style={styles.doctorName}>{doctor}</Text>
+//                       <Text style={styles.doctorName}>{doctorName}</Text>
 //                       <Text style={styles.doctorMeta}>
 //                         Serving: {stats.serving} • Waiting: {stats.waiting}
+//                       </Text>
+//                       <Text style={styles.doctorMeta}>
+//                         Fee: ₹{doctorItem.fee || 500}
 //                       </Text>
 //                     </View>
 
 //                     <View style={styles.waitPill}>
-//                       <Text style={styles.waitPillText}>
-//                         {stats.waiting * 5} min
-//                       </Text>
+//                       <Text style={styles.waitPillText}>{stats.waiting * 5} min</Text>
 //                     </View>
 
 //                     <Ionicons
@@ -233,9 +262,19 @@
 //     borderRadius: 20,
 //     padding: 14,
 //     marginBottom: 12,
+//   },
+
+//   departmentLeft: {
 //     flexDirection: "row",
-//     justifyContent: "space-between",
 //     alignItems: "center",
+//     gap: 12,
+//   },
+
+//   departmentImage: {
+//     width: 48,
+//     height: 48,
+//     borderRadius: 16,
+//     backgroundColor: "#fff",
 //   },
 
 //   departmentTitle: {
@@ -249,15 +288,6 @@
 //     marginTop: 4,
 //     fontWeight: "700",
 //     fontSize: 12,
-//   },
-
-//   departmentIcon: {
-//     width: 42,
-//     height: 42,
-//     borderRadius: 16,
-//     backgroundColor: "#fff",
-//     alignItems: "center",
-//     justifyContent: "center",
 //   },
 
 //   doctorCard: {
@@ -331,183 +361,252 @@
 
 
 
-import React from "react";
+
+
+
+// HospitalDetailsScreen.js
+// Loads real doctors from backend and real live queue stats.
+
+import React, { useEffect, useState, useCallback } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Image,
+  View, Text, StyleSheet, TouchableOpacity,
+  ScrollView, Image, RefreshControl,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";
+import { useHospital } from "../../context/HospitalContext";
 import { useQueue } from "../../context/QueueContext";
 
 const departmentImages = {
   "General OPD": require("../../../assets/departments/generalopd.jpg"),
-  Cardiology: require("../../../assets/departments/cardiology.jpg"),
-  Pediatrics: require("../../../assets/departments/pediatrics.jpg"),
-  ENT: require("../../../assets/departments/ent.jpg")
-
-};
-
-const doctorMap = {
-  "General OPD": ["Dr. Sandeep", "Dr. Ramesh"],
-  Cardiology: ["Dr. Rao", "Dr. Kavitha"],
-  Pediatrics: ["Dr. Meena", "Dr. John"],
-  Ortho: ["Dr. Kiran", "Dr. Vivek"],
-  Dental: ["Dr. Neha", "Dr. Arjun"],
-  ENT: ["Dr. Sameer Khan"],
+  Cardiology:    require("../../../assets/departments/cardiology.jpg"),
+  Pediatrics:    require("../../../assets/departments/pediatrics.jpg"),
+  ENT:           require("../../../assets/departments/ent.jpg"),
 };
 
 const getTodayDate = () => new Date().toISOString().split("T")[0];
 
 export default function HospitalDetailsScreen({ navigation, route }) {
   const hospital = route?.params?.hospital;
-  const { tokens } = useQueue();
+  const { getDoctorsByHospital } = useHospital();
+  const { loadQueueSummary } = useQueue();
+
+  const [doctors, setDoctors]         = useState([]);
+  const [summaries, setSummaries]     = useState({});  // key: "dept|doctor" → summary
+  const [loadingDocs, setLoadingDocs] = useState(true);
+  const [refreshing, setRefreshing]   = useState(false);
+
+  const hospitalId = hospital?.id || hospital?.hospitalId;
 
   const departments =
     Array.isArray(hospital?.departments) && hospital.departments.length > 0
       ? hospital.departments
       : ["General OPD"];
 
-  const getDoctors = (department) => {
-    const hospitalDoctors = hospital?.doctorList || [];
-    const filtered = hospitalDoctors.filter((doc) => doc.department === department);
+  // ── Load doctors ──────────────────────────────────────────────────────────
+  const loadDoctors = useCallback(async () => {
+    if (!hospitalId) return;
+    setLoadingDocs(true);
+    try {
+      const docs = await getDoctorsByHospital(hospitalId);
+      setDoctors(docs);
+    } catch (err) {
+      console.error("loadDoctors:", err.message);
+    } finally {
+      setLoadingDocs(false);
+    }
+  }, [hospitalId, getDoctorsByHospital]);
 
-    if (filtered.length > 0) return filtered;
+  // ── Load queue summaries for all doctors ──────────────────────────────────
+  const loadAllSummaries = useCallback(async (docList) => {
+    if (!hospitalId || !docList.length) return;
+    const today = getTodayDate();
 
-    return (doctorMap[department] || ["Any Available"]).map((name) => ({
-      id: name,
-      name,
-      department,
-      qualification: department,
-      fee: 500,
-    }));
-  };
-
-  const getQueueStats = (department, doctor) => {
-    const todayQueue = tokens.filter(
-      (t) =>
-        t.hospitalId === hospital?.id &&
-        t.department === department &&
-        t.doctor === doctor &&
-        t.date === getTodayDate() &&
-        (t.status === "waiting" || t.status === "serving")
+    const results = await Promise.allSettled(
+      docList.map((doc) =>
+        loadQueueSummary(hospitalId, doc.department, doc.name, "morning", today)
+          .then((summary) => ({ key: `${doc.department}|${doc.name}`, summary }))
+      )
     );
 
-    return {
-      active: todayQueue.length,
-      waiting: todayQueue.filter((t) => t.status === "waiting").length,
-      serving: todayQueue.find((t) => t.status === "serving")?.tokenNo || "None",
+    const map = {};
+    results.forEach((r) => {
+      if (r.status === "fulfilled" && r.value) {
+        map[r.value.key] = r.value.summary;
+      }
+    });
+    setSummaries(map);
+  }, [hospitalId, loadQueueSummary]);
+
+  useEffect(() => {
+    loadDoctors().then((docs) => {
+      // docs may be undefined if setDoctors is async — use state instead
+    });
+  }, [loadDoctors]);
+
+  // When doctors state changes, load their summaries
+  useEffect(() => {
+    if (doctors.length > 0) {
+      loadAllSummaries(doctors);
+    }
+  }, [doctors]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadDoctors();
+    setRefreshing(false);
+  }, [loadDoctors]);
+
+  // Group doctors by department
+  const doctorsByDept = departments.reduce((acc, dept) => {
+    acc[dept] = doctors.filter((d) => d.department === dept);
+    return acc;
+  }, {});
+
+  const getSummary = (department, doctorName) => {
+    return summaries[`${department}|${doctorName}`] || {
+      waitingCount: 0, currentServingNo: "None", totalBooked: 0,
     };
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
+      }
+    >
+      {/* Hero Image */}
       <View style={styles.hero}>
-        <Image source={{ uri: hospital?.image }} style={styles.heroImage} />
-
+        <Image
+          source={{ uri: hospital?.image || hospital?.imageUrl }}
+          style={styles.heroImage}
+          defaultSource={require("../../../assets/departments/generalopd.jpg")}
+        />
         <LinearGradient
           colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.65)"]}
           style={styles.overlay}
         />
-
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
 
         <View style={styles.heroText}>
-          <Text style={styles.name}>{hospital?.name || "City Care Hospital"}</Text>
-          <Text style={styles.address}>{hospital?.address || "Hyderabad"}</Text>
-
+          <Text style={styles.name}>{hospital?.name || "Hospital"}</Text>
+          <Text style={styles.address}>{hospital?.address || hospital?.city || ""}</Text>
           <View style={styles.ratingRow}>
             <Ionicons name="star" size={16} color="#FACC15" />
-            <Text style={styles.rating}>{hospital?.rating || 4.5}</Text>
+            <Text style={styles.rating}>{hospital?.rating || "4.5"}</Text>
             <Text style={styles.dot}>•</Text>
-            <Text style={styles.rating}>{hospital?.distance || "Nearby"}</Text>
+            <Text style={styles.rating}>{hospital?.city || "Nearby"}</Text>
           </View>
         </View>
       </View>
 
+      {/* Book Token CTA */}
+      <TouchableOpacity
+        style={styles.bookCTA}
+        onPress={() => navigation.navigate("BookToken", { hospital })}
+      >
+        <LinearGradient
+          colors={[COLORS.primary, "#4F46E5"]}
+          style={styles.bookGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+        >
+          <Ionicons name="ticket-outline" size={20} color="#fff" />
+          <Text style={styles.bookText}>Book Token</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+
       <View style={styles.content}>
-        <Text style={styles.section}>Select Department & Doctor</Text>
-        <Text style={styles.sectionSub}>
-          Tap any doctor to view Morning, Afternoon and Night live queue.
-        </Text>
+        <Text style={styles.section}>Departments & Doctors</Text>
+        <Text style={styles.sectionSub}>Tap a doctor to view live queue & book.</Text>
 
-        {departments.map((department) => {
-          const doctors = getDoctors(department);
-          const deptImage =
-            departmentImages[department] || departmentImages["General OPD"];
+        {loadingDocs ? (
+          <View style={styles.loadingCard}>
+            <Text style={styles.loadingText}>Loading doctors...</Text>
+          </View>
+        ) : (
+          departments.map((department) => {
+            const deptDoctors = doctorsByDept[department] || [];
+            const deptImage = departmentImages[department] || departmentImages["General OPD"];
 
-          return (
-            <View key={department} style={styles.departmentBlock}>
-              <View style={styles.departmentHeader}>
-                <View style={styles.departmentLeft}>
-                  <Image source={deptImage } style={styles.departmentImage} />
-
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.departmentTitle}>{department}</Text>
-                    <Text style={styles.departmentSub}>
-                      {doctors.length} doctor(s) available
-                    </Text>
+            return (
+              <View key={department} style={styles.departmentBlock}>
+                <View style={styles.departmentHeader}>
+                  <View style={styles.departmentLeft}>
+                    <Image source={deptImage} style={styles.departmentImage} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.departmentTitle}>{department}</Text>
+                      <Text style={styles.departmentSub}>
+                        {deptDoctors.length > 0
+                          ? `${deptDoctors.length} doctor(s) available`
+                          : "No doctors added yet"}
+                      </Text>
+                    </View>
                   </View>
                 </View>
+
+                {deptDoctors.length === 0 ? (
+                  <View style={styles.noDoctorsCard}>
+                    <Text style={styles.noDoctorsText}>No doctors added by hospital yet.</Text>
+                  </View>
+                ) : (
+                  deptDoctors.map((doc) => {
+                    const stats = getSummary(department, doc.name);
+
+                    return (
+                      <TouchableOpacity
+                        key={doc.id}
+                        style={styles.doctorCard}
+                        activeOpacity={0.86}
+                        onPress={() =>
+                          navigation.navigate("DoctorLiveQueue", {
+                            hospital,
+                            department,
+                            doctor: doc.name,
+                            doctorId: doc.id,
+                          })
+                        }
+                      >
+                        <View style={styles.doctorIcon}>
+                          {doc.imageUrl ? (
+                            <Image source={{ uri: doc.imageUrl }} style={styles.doctorImg} />
+                          ) : (
+                            <Ionicons name="medkit-outline" size={22} color={COLORS.primary} />
+                          )}
+                        </View>
+
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.doctorName}>{doc.name}</Text>
+                          <Text style={styles.doctorMeta}>
+                            {doc.qualification || department}
+                            {doc.experience ? ` • ${doc.experience}` : ""}
+                          </Text>
+                          <Text style={styles.doctorMeta}>
+                            Now Serving: {stats.currentServingNo} • Waiting: {stats.waitingCount}
+                          </Text>
+                          <Text style={styles.doctorFee}>₹{doc.fee || 500} consultation</Text>
+                        </View>
+
+                        <View style={styles.waitPill}>
+                          <Text style={styles.waitPillText}>
+                            {(stats.waitingCount || 0) * 5} min
+                          </Text>
+                        </View>
+
+                        <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
               </View>
-
-              {doctors.map((doctorItem) => {
-                const doctorName = doctorItem.name || doctorItem;
-                const stats = getQueueStats(department, doctorName);
-
-                return (
-                  <TouchableOpacity
-                    key={`${department}-${doctorName}`}
-                    style={styles.doctorCard}
-                    activeOpacity={0.86}
-                    onPress={() =>
-                      navigation.navigate("DoctorLiveQueue", {
-                        hospital,
-                        department,
-                        doctor: doctorName,
-                      })
-                    }
-                  >
-                    <View style={styles.doctorIcon}>
-                      <Ionicons
-                        name="medkit-outline"
-                        size={22}
-                        color={COLORS.primary}
-                      />
-                    </View>
-
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.doctorName}>{doctorName}</Text>
-                      <Text style={styles.doctorMeta}>
-                        Serving: {stats.serving} • Waiting: {stats.waiting}
-                      </Text>
-                      <Text style={styles.doctorMeta}>
-                        Fee: ₹{doctorItem.fee || 500}
-                      </Text>
-                    </View>
-
-                    <View style={styles.waitPill}>
-                      <Text style={styles.waitPillText}>{stats.waiting * 5} min</Text>
-                    </View>
-
-                    <Ionicons
-                      name="chevron-forward"
-                      size={20}
-                      color={COLORS.muted}
-                    />
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          );
-        })}
+            );
+          })
+        )}
       </View>
     </ScrollView>
   );
@@ -515,151 +614,70 @@ export default function HospitalDetailsScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-
   hero: { height: 300, position: "relative" },
   heroImage: { width: "100%", height: "100%" },
   overlay: { ...StyleSheet.absoluteFillObject },
-
   backBtn: {
-    position: "absolute",
-    top: 52,
-    left: 18,
-    width: 44,
-    height: 44,
-    borderRadius: 16,
+    position: "absolute", top: 52, left: 18,
+    width: 44, height: 44, borderRadius: 16,
     backgroundColor: "rgba(0,0,0,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: "center", justifyContent: "center",
   },
-
-  heroText: {
-    position: "absolute",
-    left: 18,
-    right: 18,
-    bottom: 24,
-  },
-
+  heroText: { position: "absolute", left: 18, right: 18, bottom: 24 },
   name: { fontSize: 28, fontWeight: "900", color: "#fff" },
-
-  address: {
-    color: "rgba(255,255,255,0.85)",
-    marginTop: 6,
-    fontWeight: "600",
-  },
-
-  ratingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 10,
-  },
-
+  address: { color: "rgba(255,255,255,0.85)", marginTop: 6, fontWeight: "600" },
+  ratingRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10 },
   rating: { color: "#fff", fontWeight: "800" },
   dot: { color: "#fff", fontWeight: "900" },
 
+  bookCTA: { marginHorizontal: 18, marginTop: 18, borderRadius: 18, overflow: "hidden" },
+  bookGradient: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 10, paddingVertical: 16,
+  },
+  bookText: { color: "#fff", fontWeight: "900", fontSize: 16 },
+
   content: { padding: 18 },
+  section: { marginTop: 10, marginBottom: 8, fontSize: 18, fontWeight: "900", color: COLORS.text },
+  sectionSub: { color: COLORS.muted, fontWeight: "600", marginBottom: 14 },
 
-  section: {
-    marginTop: 10,
-    marginBottom: 8,
-    fontSize: 18,
-    fontWeight: "900",
-    color: COLORS.text,
+  loadingCard: {
+    backgroundColor: COLORS.card, borderRadius: 20, padding: 24,
+    alignItems: "center", borderWidth: 1, borderColor: COLORS.border,
   },
-
-  sectionSub: {
-    color: COLORS.muted,
-    fontWeight: "600",
-    marginBottom: 14,
-  },
+  loadingText: { color: COLORS.muted, fontWeight: "700" },
 
   departmentBlock: {
-    backgroundColor: COLORS.card,
-    borderRadius: 26,
-    padding: 14,
-    marginBottom: 18,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    elevation: 2,
+    backgroundColor: COLORS.card, borderRadius: 26, padding: 14,
+    marginBottom: 18, borderWidth: 1, borderColor: COLORS.border, elevation: 2,
   },
-
   departmentHeader: {
-    backgroundColor: COLORS.lightBlue,
-    borderRadius: 20,
-    padding: 14,
-    marginBottom: 12,
+    backgroundColor: COLORS.lightBlue, borderRadius: 20, padding: 14, marginBottom: 12,
   },
+  departmentLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  departmentImage: { width: 48, height: 48, borderRadius: 16, backgroundColor: "#fff" },
+  departmentTitle: { color: COLORS.primary, fontSize: 17, fontWeight: "900" },
+  departmentSub: { color: COLORS.muted, marginTop: 4, fontWeight: "700", fontSize: 12 },
 
-  departmentLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-
-  departmentImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: "#fff",
-  },
-
-  departmentTitle: {
-    color: COLORS.primary,
-    fontSize: 17,
-    fontWeight: "900",
-  },
-
-  departmentSub: {
-    color: COLORS.muted,
-    marginTop: 4,
-    fontWeight: "700",
-    fontSize: 12,
-  },
+  noDoctorsCard: { padding: 14, alignItems: "center" },
+  noDoctorsText: { color: COLORS.muted, fontWeight: "600" },
 
   doctorCard: {
-    backgroundColor: "#fff",
-    borderRadius: 22,
-    padding: 14,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
+    backgroundColor: "#fff", borderRadius: 22, padding: 14, marginBottom: 12,
+    borderWidth: 1, borderColor: COLORS.border,
+    flexDirection: "row", alignItems: "center", gap: 12,
   },
-
   doctorIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 16,
-    backgroundColor: COLORS.lightBlue,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 48, height: 48, borderRadius: 16,
+    backgroundColor: COLORS.lightBlue, alignItems: "center", justifyContent: "center",
+    overflow: "hidden",
   },
-
-  doctorName: {
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: "900",
-  },
-
-  doctorMeta: {
-    color: COLORS.muted,
-    fontWeight: "700",
-    marginTop: 4,
-    fontSize: 12,
-  },
-
+  doctorImg: { width: 48, height: 48 },
+  doctorName: { color: COLORS.text, fontSize: 16, fontWeight: "900" },
+  doctorMeta: { color: COLORS.muted, fontWeight: "700", marginTop: 4, fontSize: 12 },
+  doctorFee: { color: COLORS.primary, fontWeight: "800", marginTop: 4, fontSize: 12 },
   waitPill: {
-    backgroundColor: "#ECFDF5",
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 999,
+    backgroundColor: "#ECFDF5", paddingHorizontal: 10, paddingVertical: 7, borderRadius: 999,
   },
-
-  waitPillText: {
-    color: COLORS.success,
-    fontSize: 12,
-    fontWeight: "900",
-  },
+  waitPillText: { color: COLORS.success, fontSize: 12, fontWeight: "900" },
 });

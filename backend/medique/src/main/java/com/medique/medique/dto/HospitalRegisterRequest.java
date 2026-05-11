@@ -3,32 +3,17 @@
 
 
 
-package com.medique.medique.entity;
 
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "hospitals")
-public class Hospital {
+package com.medique.medique.dto;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class HospitalRegisterRequest {
 
-    @Column(unique = true, nullable = false)
-    private String hospitalId;
-
-    @Column(nullable = false)
     private String name;
-
     private String ownerName;
-
-    @Column(unique = true)
-    private String email;
-
-    private String password;
     private String phone;
+    private String email;
+    private String password;
     private String type;
     private String address;
     private String city;
@@ -38,18 +23,7 @@ public class Hospital {
     private Integer numberOfDoctors;
     private String imageUrl;
 
-    @Enumerated(EnumType.STRING)
-    private HospitalStatus status = HospitalStatus.PENDING;
-
-    private LocalDateTime createdAt = LocalDateTime.now();
-
     // ── Getters & Setters ────────────────────────────────────────────────────
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getHospitalId() { return hospitalId; }
-    public void setHospitalId(String hospitalId) { this.hospitalId = hospitalId; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -57,14 +31,14 @@ public class Hospital {
     public String getOwnerName() { return ownerName; }
     public void setOwnerName(String ownerName) { this.ownerName = ownerName; }
 
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
-
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
@@ -76,23 +50,17 @@ public class Hospital {
     public void setCity(String city) { this.city = city; }
 
     public String getRegistrationNumber() { return registrationNumber; }
-    public void setRegistrationNumber(String registrationNumber) { this.registrationNumber = registrationNumber; }
+    public void setRegistrationNumber(String r) { this.registrationNumber = r; }
 
     public String getLicenseNumber() { return licenseNumber; }
-    public void setLicenseNumber(String licenseNumber) { this.licenseNumber = licenseNumber; }
+    public void setLicenseNumber(String l) { this.licenseNumber = l; }
 
     public String getDepartments() { return departments; }
     public void setDepartments(String departments) { this.departments = departments; }
 
     public Integer getNumberOfDoctors() { return numberOfDoctors; }
-    public void setNumberOfDoctors(Integer numberOfDoctors) { this.numberOfDoctors = numberOfDoctors; }
+    public void setNumberOfDoctors(Integer n) { this.numberOfDoctors = n; }
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-
-    public HospitalStatus getStatus() { return status; }
-    public void setStatus(HospitalStatus status) { this.status = status; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

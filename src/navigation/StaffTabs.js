@@ -29,7 +29,7 @@ export default function StaffTabs() {
             Dashboard: "grid-outline",
             Queue: "people-outline",
             Tokens: "add-circle-outline",
-            Reports: "stats-chart-outline",
+            Feedback: "stats-chart-outline",
               Timings: "time-outline",
             Profile: "person-outline",
           };
@@ -40,10 +40,21 @@ export default function StaffTabs() {
       <Tab.Screen name="Dashboard" component={StaffDashboardScreen} />
       <Tab.Screen name="Queue" component={QueueManagementScreen} />
       <Tab.Screen name="Tokens" component={CreateTokenScreen} />
-      <Tab.Screen name="Reports" component={StaffReportsScreen} /> 
-            <Tab.Screen name="Timings" component={DoctorTimingsScreen} />
-      <Tab.Screen name="Profile" component={StaffProfileScreen} />
+      <Tab.Screen name="Feedback" component={StaffReportsScreen} /> 
+      <Tab.Screen name="Timings" component={DoctorTimingsScreen} />
+      <Tab.Screen name="Profile" component={StaffProfileScreen} /> 
 
     </Tab.Navigator>
   );
-}
+} 
+
+
+
+
+
+
+
+
+
+
+

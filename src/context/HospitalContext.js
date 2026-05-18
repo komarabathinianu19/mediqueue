@@ -3,321 +3,262 @@
 
 
 
-// import React, { createContext, useContext, useMemo, useState } from "react";
+// // HospitalContext.js
+// // Fetches approved hospitals + provides helpers for doctors and departments
+// // Supports Staff Sessions, Profile Updates, and Feedback Reports
+
+// import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+// import * as Api from "../services/apiService";
 
 // const HospitalContext = createContext(null);
 
 // export const DEPARTMENT_IMAGES = {
-//   "General OPD":
-//     "https://cdn-icons-png.flaticon.com/512/2966/2966327.png",
-//   Cardiology:
-//     "https://cdn-icons-png.flaticon.com/512/2966/2966486.png",
-//   Pediatrics:
-//     "https://cdn-icons-png.flaticon.com/512/2966/2966535.png",
-//   ENT:
-//     "https://cdn-icons-png.flaticon.com/512/3209/3209072.png",
-//   Ortho:
-//     "https://cdn-icons-png.flaticon.com/512/2966/2966420.png",
-//   Dermatology:
-//     "https://cdn-icons-png.flaticon.com/512/3468/3468377.png",
-//   Dental:
-//     "https://cdn-icons-png.flaticon.com/512/3004/3004458.png",
-//   Neurology:
-//     "https://cdn-icons-png.flaticon.com/512/2966/2966334.png",
+//   "General OPD": "https://cdn-icons-png.flaticon.com/512/2966/2966327.png",
+//   Cardiology:    "https://cdn-icons-png.flaticon.com/512/2966/2966486.png",
+//   Pediatrics:    "https://cdn-icons-png.flaticon.com/512/2966/2966535.png",
+//   ENT:           "https://cdn-icons-png.flaticon.com/512/3209/3209072.png",
+//   Ortho:         "https://cdn-icons-png.flaticon.com/512/2966/2966420.png",
+//   Dermatology:   "https://cdn-icons-png.flaticon.com/512/3468/3468377.png",
+//   Dental:        "https://cdn-icons-png.flaticon.com/512/3004/3004458.png",
+//   Neurology:     "https://cdn-icons-png.flaticon.com/512/2966/2966334.png",
 // };
 
-// const defaultDoctorTimings = {
+// export const defaultDoctorTimings = {
 //   morning: {
-//     label: "Morning",
-//     enabled: true,
-//     startTime: "09:00 AM",
-//     endTime: "12:00 PM",
-//     maxPatients: 30,
+//     label: "Morning", enabled: true,
+//     startTime: "09:00 AM", endTime: "12:00 PM", maxPatients: 30,
 //   },
 //   afternoon: {
-//     label: "Afternoon",
-//     enabled: true,
-//     startTime: "01:00 PM",
-//     endTime: "04:00 PM",
-//     maxPatients: 25,
+//     label: "Afternoon", enabled: true,
+//     startTime: "01:00 PM", endTime: "04:00 PM", maxPatients: 25,
 //   },
 //   night: {
-//     label: "Night",
-//     enabled: true,
-//     startTime: "06:00 PM",
-//     endTime: "09:00 PM",
-//     maxPatients: 20,
+//     label: "Night", enabled: true,
+//     startTime: "06:00 PM", endTime: "09:00 PM", maxPatients: 20,
 //   },
 // };
 
-// const initialHospitals = [
-//   {
-//     id: "h1",
-//     name: "City Care Hospital",
-//     owner: "Ravi Kumar",
-//     phone: "9876543210",
-//     email: "info@citycare.com",
-//     city: "Hyderabad",
-//     address: "Madhapur, Hyderabad",
-//     license: "LIC987654",
-//     regNo: "REG1234567",
-//     departments: ["General OPD", "Cardiology", "Pediatrics", "ENT"],
-//     doctors: 18,
-//     wait: "35 mins wait",
-//     queue: 18,
-//     rating: 4.5,
-//     distance: "1.2 km",
-//     status: "approved",
-//     image:
-//       "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=900",
-//     documents: [],
-//     rejectionReason: "",
-
-//     doctorList: [
-//       {
-//         id: "d1",
-//         name: "Dr. Arjun",
-//         department: "General OPD",
-//         qualification: "MBBS, MD",
-//         experience: "12 years",
-//         fee: 300,
-//         image:
-//           "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=500",
-//         timings: defaultDoctorTimings,
-//       },
-//       {
-//         id: "d2",
-//         name: "Dr. Meera Sharma",
-//         department: "Cardiology",
-//         qualification: "MBBS, DM Cardiology",
-//         experience: "10 years",
-//         fee: 600,
-//         image:
-//           "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500",
-//         timings: {
-//           ...defaultDoctorTimings,
-//           night: {
-//             label: "Night",
-//             enabled: false,
-//             startTime: "",
-//             endTime: "",
-//             maxPatients: 0,
-//           },
-//         },
-//       },
-//       {
-//         id: "d3",
-//         name: "Dr. Kavya Rao",
-//         department: "Pediatrics",
-//         qualification: "MBBS, DCH",
-//         experience: "8 years",
-//         fee: 400,
-//         image:
-//           "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=500",
-//         timings: defaultDoctorTimings,
-//       },
-//       {
-//         id: "d4",
-//         name: "Dr. Sameer Khan",
-//         department: "ENT",
-//         qualification: "MBBS, MS ENT",
-//         experience: "9 years",
-//         fee: 450,
-//         image:
-//           "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500",
-//         timings: defaultDoctorTimings,
-//       },
-//     ],
-//   },
-//   {
-//     id: "h2",
-//     name: "Life Plus Hospital",
-//     owner: "Suresh Reddy",
-//     phone: "9876500000",
-//     email: "lifeplus@gmail.com",
-//     city: "Bangalore",
-//     address: "BTM Layout, Bangalore",
-//     license: "LIC445566",
-//     regNo: "REG778899",
-//     departments: ["General OPD", "Ortho", "Dental"],
-//     doctors: 11,
-//     wait: "22 mins wait",
-//     queue: 10,
-//     rating: 4.7,
-//     distance: "2.4 km",
-//     status: "pending",
-//     image:
-//       "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=900",
-//     documents: [],
-//     rejectionReason: "",
-
-//     doctorList: [
-//       {
-//         id: "d5",
-//         name: "Dr. Priya Nair",
-//         department: "General OPD",
-//         qualification: "MBBS",
-//         experience: "7 years",
-//         fee: 250,
-//         image:
-//           "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=500",
-//         timings: defaultDoctorTimings,
-//       },
-//       {
-//         id: "d6",
-//         name: "Dr. Rakesh Verma",
-//         department: "Ortho",
-//         qualification: "MBBS, MS Ortho",
-//         experience: "14 years",
-//         fee: 500,
-//         image:
-//           "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=500",
-//         timings: defaultDoctorTimings,
-//       },
-//     ],
-//   },
-// ];
+// export const parseTimings = (timingsJson) => {
+//   if (!timingsJson) return defaultDoctorTimings;
+//   if (typeof timingsJson === "object") return timingsJson;
+//   try {
+//     return JSON.parse(timingsJson);
+//   } catch {
+//     return defaultDoctorTimings;
+//   }
+// };
 
 // export function HospitalProvider({ children }) {
-//   const [hospitals, setHospitals] = useState(initialHospitals);
+//   const [hospitals, setHospitals] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState(null);
 
-//   const approvedHospitals = useMemo(
-//     () => hospitals.filter((h) => h.status === "approved"),
+//   // ── STAFF & REPORTS STATE ──────────────────────────────────────────────────
+//   const [staffHospitalData, setStaffHospitalData] = useState(null);
+//   const [feedbacks, setFeedbacks] = useState([]);
+
+//   // ── Patient Logic: Fetch approved hospitals ────────────────────────────────
+//   const loadHospitals = useCallback(async () => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const data = await Api.fetchApprovedHospitals();
+//       setHospitals(data);
+//     } catch (err) {
+//       console.error("HospitalContext: loadHospitals failed:", err.message);
+//       setError(err.message);
+//     } finally {
+//       setLoading(false);
+//     }
+//   }, []);
+
+//   useEffect(() => {
+//     loadHospitals();
+//   }, [loadHospitals]);
+
+//   // // ── Staff Session Logic ────────────────────────────────────────────────────
+//   // const setStaffSession = useCallback(async (data) => {
+//   //   // data contains { token, hospitalId, ... }
+//   //   setStaffHospitalData(data);
+    
+//   //   // Once logged in, fetch live feedback for the reports screen
+//   //   if (data?.hospitalId) {
+//   //     try {
+//   //       const feedbackList = await Api.fetchHospitalFeedback(data.hospitalId);
+//   //       setFeedbacks(feedbackList || []);
+//   //     } catch (err) {
+//   //       console.error("Initial Feedback Load Error:", err);
+//   //     }
+//   //   }
+//   // }, []);
+ 
+//   // ── Staff Session Logic ────────────────────────────────────────────────────
+// const setStaffSession = useCallback(async (loginData) => {
+//   // loginData typically contains { token, hospitalId }
+//   if (loginData?.hospitalId) {
+//     setLoading(true);
+//     try {
+//       // 1. Fetch the full hospital profile
+//       const hospitalProfile = await Api.fetchHospitalProfile(loginData.hospitalId);
+      
+//       // 2. Fetch doctors for this hospital and parse their timings
+//       const rawDoctors = await Api.fetchDoctors(loginData.hospitalId);
+//       const doctorList = (rawDoctors || []).map((d) => ({
+//         ...d,
+//         timings: parseTimings(d.timingsJson),
+//       }));
+
+//       // 3. Merge login data, full profile, and doctorList into state
+//       setStaffHospitalData({ ...loginData, ...hospitalProfile, doctorList });
+
+//       // 4. Fetch feedback for reports
+//       const feedbackList = await Api.fetchHospitalFeedback(loginData.hospitalId);
+//       setFeedbacks(feedbackList || []);
+//     } catch (err) {
+//       console.error("Error loading staff session data:", err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+// }, []);
+
+//   const clearStaffSession = useCallback(() => {
+//     setStaffHospitalData(null);
+//     setFeedbacks([]);
+//   }, []);
+
+//   // ── Staff Action: Update Hospital Profile ──────────────────────────────────
+//   const updateHospitalProfile = useCallback(async (updates) => {
+//     setLoading(true);
+//     try {
+//       let finalUpdates = { ...updates };
+
+//       // Handle Image upload if image is a local path
+//       if (updates.image && updates.image.startsWith('file://')) {
+//         const uploadRes = await Api.uploadHospitalImage(updates.image);
+//         finalUpdates.image = uploadRes.imageUrl;
+//       }
+
+//       const updatedProfile = await Api.updateHospitalProfile(finalUpdates);
+      
+//       // Update local session state with new data from MySQL
+//       setStaffHospitalData((prev) => ({ ...prev, ...updatedProfile }));
+//       return { success: true };
+//     } catch (err) {
+//       console.error("updateHospitalProfile failed:", err.message);
+//       return { success: false, error: err.message };
+//     } finally {
+//       setLoading(false);
+//     }
+//   }, []);
+
+//   // ── Staff Action: Refresh Reports ──────────────────────────────────────────
+//   const refreshFeedbacks = useCallback(async () => {
+//     if (!staffHospitalData?.hospitalId) return;
+//     try {
+//       const data = await Api.fetchHospitalFeedback(staffHospitalData.hospitalId);
+//       setFeedbacks(data || []);
+//     } catch (err) {
+//       console.error("refreshFeedbacks failed:", err.message);
+//     }
+//   }, [staffHospitalData]); 
+
+
+//   const refreshDoctors = useCallback(async (hospitalId) => {
+//     try {
+//       const rawDoctors = await Api.fetchDoctors(hospitalId);
+//       const doctorList = (rawDoctors || []).map((d) => ({
+//         ...d,
+//         timings: parseTimings(d.timingsJson),
+//       }));
+//       setStaffHospitalData((prev) => ({ ...prev, doctorList }));
+//       return doctorList;
+//     } catch (err) {
+//       console.error("refreshDoctors failed:", err.message);
+//       return [];
+//     }
+//   }, []);
+
+//   const updateDoctorTimings = useCallback(async (hospitalId, doctorId, timings) => {
+//     try {
+//       const response = await Api.updateDoctorTimings(doctorId, timings);
+      
+//       // Refresh doctorList so DoctorTimingsScreen and CreateTokenScreen see updated timings
+//       const rawDoctors = await Api.fetchDoctors(hospitalId);
+//       const doctorList = (rawDoctors || []).map((d) => ({
+//         ...d,
+//         timings: parseTimings(d.timingsJson),
+//       }));
+//       setStaffHospitalData((prev) => ({ ...prev, doctorList }));
+      
+//       return response;
+//     } catch (err) {
+//       console.error("updateDoctorTimings failed:", err.message);
+//       throw err;
+//     }
+//   }, []);
+
+//   // ── Data Helpers (Patients & Staff) ────────────────────────────────────────
+//   const getDepartmentsByHospital = useCallback(async (hospitalId) => {
+//     try {
+//       return await Api.fetchDepartments(hospitalId);
+//     } catch (err) {
+//       console.error("getDepartmentsByHospital failed:", err.message);
+//       return [];
+//     }
+//   }, []);
+
+//   const getDoctorsByHospital = useCallback(async (hospitalId) => {
+//     try {
+//       const doctors = await Api.fetchDoctors(hospitalId);
+//       return doctors.map((d) => ({
+//         ...d,
+//         timings: parseTimings(d.timingsJson),
+//       }));
+//     } catch (err) {
+//       console.error("getDoctorsByHospital failed:", err.message);
+//       return [];
+//     }
+//   }, []);
+
+//   const getHospitalById = useCallback(
+//     (hospitalId) =>
+//       hospitals.find((h) => h.id === hospitalId || h.hospitalId === hospitalId),
 //     [hospitals]
 //   );
 
-//   const pendingHospitals = useMemo(
-//     () => hospitals.filter((h) => h.status === "pending"),
-//     [hospitals]
-//   );
-
-//   const rejectedHospitals = useMemo(
-//     () => hospitals.filter((h) => h.status === "rejected"),
-//     [hospitals]
-//   );
-
-//   const registerHospital = (hospitalData) => {
-//     const newHospital = {
-//       id: `h-${Date.now()}`,
-//       wait: "Not active",
-//       queue: 0,
-//       rating: 0,
-//       distance: "New",
-//       status: "pending",
-//       rejectionReason: "",
-//       image:
-//         hospitalData.image ||
-//         "https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=900",
-//       doctorList: [],
-//       ...hospitalData,
-//     };
-
-//     setHospitals((prev) => [newHospital, ...prev]);
-//     return newHospital;
-//   };
-
-//   const approveHospital = (id) => {
-//     setHospitals((prev) =>
-//       prev.map((h) =>
-//         h.id === id ? { ...h, status: "approved", rejectionReason: "" } : h
-//       )
-//     );
-//   };
-
-//   const rejectHospital = (id, reason = "Documents are invalid") => {
-//     setHospitals((prev) =>
-//       prev.map((h) =>
-//         h.id === id ? { ...h, status: "rejected", rejectionReason: reason } : h
-//       )
-//     );
-//   };
-
-//   const addDoctorToHospital = (hospitalId, doctorData) => {
-//     const newDoctor = {
-//       id: `d-${Date.now()}`,
-//       timings: defaultDoctorTimings,
-//       ...doctorData,
-//     };
-
-//     setHospitals((prev) =>
-//       prev.map((hospital) =>
-//         hospital.id === hospitalId
-//           ? {
-//               ...hospital,
-//               doctorList: [...(hospital.doctorList || []), newDoctor],
-//               doctors: (hospital.doctorList || []).length + 1,
-//               departments: hospital.departments.includes(newDoctor.department)
-//                 ? hospital.departments
-//                 : [...hospital.departments, newDoctor.department],
-//             }
-//           : hospital
-//       )
-//     );
-
-//     return newDoctor;
-//   };
-
-//   const updateDoctorTimings = (hospitalId, doctorId, timings) => {
-//     setHospitals((prev) =>
-//       prev.map((hospital) => {
-//         if (hospital.id !== hospitalId) return hospital;
-
-//         return {
-//           ...hospital,
-//           doctorList: (hospital.doctorList || []).map((doctor) =>
-//             doctor.id === doctorId
-//               ? {
-//                   ...doctor,
-//                   timings: {
-//                     ...doctor.timings,
-//                     ...timings,
-//                   },
-//                 }
-//               : doctor
-//           ),
-//         };
-//       })
-//     );
-//   };
-
-//   const getHospitalById = (hospitalId) => {
-//     return hospitals.find((h) => h.id === hospitalId);
-//   };
-
-//   const getDoctorsByHospitalAndDepartment = (hospitalId, department) => {
-//     const hospital = getHospitalById(hospitalId);
-//     if (!hospital) return [];
-
-//     return (hospital.doctorList || []).filter(
-//       (doctor) => doctor.department === department
-//     );
-//   };
-
-//   const getDepartmentImage = (departmentName) => {
+//   const getDepartmentImage = useCallback((departmentName) => {
 //     return (
 //       DEPARTMENT_IMAGES[departmentName] ||
 //       "https://cdn-icons-png.flaticon.com/512/2966/2966327.png"
 //     );
-//   };
+//   }, []);
 
 //   const value = {
 //     hospitals,
-//     approvedHospitals,
-//     pendingHospitals,
-//     rejectedHospitals,
+//     loading,
+//     error,
+//     loadHospitals,
 
-//     registerHospital,
-//     approveHospital,
-//     rejectHospital,
-
-//     addDoctorToHospital,
+//     // Staff state & actions
+//     staffHospitalData,
+//     feedbacks,
+//     setStaffSession,
+//     clearStaffSession,
+//     updateHospitalProfile,
 //     updateDoctorTimings,
+//     refreshDoctors,
+//     refreshFeedbacks,
+
+//     // Data Helpers
 //     getHospitalById,
-//     getDoctorsByHospitalAndDepartment,
+//     getDoctorsByHospital,
+//     getDepartmentsByHospital,
 //     getDepartmentImage,
 
 //     defaultDoctorTimings,
 //     DEPARTMENT_IMAGES,
+//     parseTimings,
 //   };
 
 //   return (
@@ -329,13 +270,17 @@
 
 // export function useHospital() {
 //   const context = useContext(HospitalContext);
-
-//   if (!context) {
+//   if (!context)
 //     throw new Error("useHospital must be used inside HospitalProvider");
-//   }
-
 //   return context;
-// }  
+// } 
+
+
+
+
+
+
+
 
 
 
@@ -362,10 +307,11 @@
 
 
 // HospitalContext.js
-// Replaces all hardcoded mock hospitals with real API data from backend.
+// Fetches approved hospitals + provides helpers for doctors and departments
+// Supports Staff Sessions, Profile Updates, and Feedback Reports
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { fetchApprovedHospitals, fetchDoctors } from "../services/apiService";
+import * as Api from "../services/apiService";
 
 const HospitalContext = createContext(null);
 
@@ -378,17 +324,6 @@ export const DEPARTMENT_IMAGES = {
   Dermatology:   "https://cdn-icons-png.flaticon.com/512/3468/3468377.png",
   Dental:        "https://cdn-icons-png.flaticon.com/512/3004/3004458.png",
   Neurology:     "https://cdn-icons-png.flaticon.com/512/2966/2966334.png",
-};
-
-// Parse timingsJson string → object safely
-export const parseTimings = (timingsJson) => {
-  if (!timingsJson) return defaultDoctorTimings;
-  if (typeof timingsJson === "object") return timingsJson;
-  try {
-    return JSON.parse(timingsJson);
-  } catch {
-    return defaultDoctorTimings;
-  }
 };
 
 export const defaultDoctorTimings = {
@@ -406,18 +341,31 @@ export const defaultDoctorTimings = {
   },
 };
 
+export const parseTimings = (timingsJson) => {
+  if (!timingsJson) return defaultDoctorTimings;
+  if (typeof timingsJson === "object") return timingsJson;
+  try {
+    return JSON.parse(timingsJson);
+  } catch {
+    return defaultDoctorTimings;
+  }
+};
+
 export function HospitalProvider({ children }) {
   const [hospitals, setHospitals] = useState([]);
-  const [loading, setLoading]     = useState(false);
-  const [error, setError]         = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // ── Fetch approved hospitals from backend ─────────────────────────────────
+  // ── STAFF & REPORTS STATE ──────────────────────────────────────────────────
+  const [staffHospitalData, setStaffHospitalData] = useState(null);
+  const [feedbacks, setFeedbacks] = useState([]);
+
+  // ── Patient Logic: Fetch approved hospitals ────────────────────────────────
   const loadHospitals = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchApprovedHospitals();
-      // Backend returns: { id (=hospitalId), name, departments[], imageUrl/image, city, ... }
+      const data = await Api.fetchApprovedHospitals();
       setHospitals(data);
     } catch (err) {
       console.error("HospitalContext: loadHospitals failed:", err.message);
@@ -427,16 +375,145 @@ export function HospitalProvider({ children }) {
     }
   }, []);
 
-  // Load on mount
   useEffect(() => {
     loadHospitals();
+  }, [loadHospitals]);
+
+  // // ── Staff Session Logic ────────────────────────────────────────────────────
+  // const setStaffSession = useCallback(async (data) => {
+  //   // data contains { token, hospitalId, ... }
+  //   setStaffHospitalData(data);
+    
+  //   // Once logged in, fetch live feedback for the reports screen
+  //   if (data?.hospitalId) {
+  //     try {
+  //       const feedbackList = await Api.fetchHospitalFeedback(data.hospitalId);
+  //       setFeedbacks(feedbackList || []);
+  //     } catch (err) {
+  //       console.error("Initial Feedback Load Error:", err);
+  //     }
+  //   }
+  // }, []);
+ 
+  // ── Staff Session Logic ────────────────────────────────────────────────────
+const setStaffSession = useCallback(async (loginData) => {
+  // loginData typically contains { token, hospitalId }
+  if (loginData?.hospitalId) {
+    setLoading(true);
+    try {
+      // 1. Fetch the full hospital profile
+      const hospitalProfile = await Api.fetchHospitalProfile(loginData.hospitalId);
+      
+      // 2. Fetch doctors for this hospital and parse their timings
+      const rawDoctors = await Api.fetchDoctors(loginData.hospitalId);
+      const doctorList = (rawDoctors || []).map((d) => ({
+        ...d,
+        timings: parseTimings(d.timingsJson),
+      }));
+
+      // 3. Merge login data, full profile, and doctorList into state
+      setStaffHospitalData({ ...loginData, ...hospitalProfile, doctorList });
+
+      // 4. Fetch feedback for reports
+      const feedbackList = await Api.fetchHospitalFeedback(loginData.hospitalId);
+      setFeedbacks(feedbackList || []);
+    } catch (err) {
+      console.error("Error loading staff session data:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+}, []);
+
+  const clearStaffSession = useCallback(() => {
+    setStaffHospitalData(null);
+    setFeedbacks([]);
   }, []);
 
-  // ── Fetch doctors for a hospital (lazy, called by screens) ────────────────
+  // ── Staff Action: Update Hospital Profile ──────────────────────────────────
+  const updateHospitalProfile = useCallback(async (updates) => {
+    setLoading(true);
+    try {
+      let finalUpdates = { ...updates };
+
+      // Handle Image upload if image is a local path
+      if (updates.image && updates.image.startsWith('file://')) {
+        const uploadRes = await Api.uploadHospitalImage(updates.image);
+        finalUpdates.image = uploadRes.imageUrl;
+      }
+
+      const updatedProfile = await Api.updateHospitalProfile(finalUpdates);
+      
+      // Update local session state with new data from MySQL
+      setStaffHospitalData((prev) => ({ ...prev, ...updatedProfile }));
+      return { success: true };
+    } catch (err) {
+      console.error("updateHospitalProfile failed:", err.message);
+      return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ── Staff Action: Refresh Reports ──────────────────────────────────────────
+  const refreshFeedbacks = useCallback(async () => {
+    if (!staffHospitalData?.hospitalId) return;
+    try {
+      const data = await Api.fetchHospitalFeedback(staffHospitalData.hospitalId);
+      setFeedbacks(data || []);
+    } catch (err) {
+      console.error("refreshFeedbacks failed:", err.message);
+    }
+  }, [staffHospitalData]); 
+
+
+  const refreshDoctors = useCallback(async (hospitalId) => {
+    try {
+      const rawDoctors = await Api.fetchDoctors(hospitalId);
+      const doctorList = (rawDoctors || []).map((d) => ({
+        ...d,
+        timings: parseTimings(d.timingsJson),
+      }));
+      setStaffHospitalData((prev) => ({ ...prev, doctorList }));
+      return doctorList;
+    } catch (err) {
+      console.error("refreshDoctors failed:", err.message);
+      return [];
+    }
+  }, []);
+
+  const updateDoctorTimings = useCallback(async (hospitalId, doctorId, timings) => {
+    try {
+      const response = await Api.updateDoctorTimings(doctorId, timings);
+      
+      // Refresh doctorList so DoctorTimingsScreen and CreateTokenScreen see updated timings
+      const rawDoctors = await Api.fetchDoctors(hospitalId);
+      const doctorList = (rawDoctors || []).map((d) => ({
+        ...d,
+        timings: parseTimings(d.timingsJson),
+      }));
+      setStaffHospitalData((prev) => ({ ...prev, doctorList }));
+      
+      return response;
+    } catch (err) {
+      console.error("updateDoctorTimings failed:", err.message);
+      throw err;
+    }
+  }, []);
+
+  // ── Data Helpers (Patients & Staff) ────────────────────────────────────────
+  const getDepartmentsByHospital = useCallback(async (hospitalId) => {
+    try {
+      return await Api.fetchDepartments(hospitalId);
+    } catch (err) {
+      console.error("getDepartmentsByHospital failed:", err.message);
+      return [];
+    }
+  }, []);
+
   const getDoctorsByHospital = useCallback(async (hospitalId) => {
     try {
-      const doctors = await fetchDoctors(hospitalId);
-      // Attach parsed timings so screens don't need to parse JSON
+      const doctors = await Api.fetchDoctors(hospitalId);
       return doctors.map((d) => ({
         ...d,
         timings: parseTimings(d.timingsJson),
@@ -447,25 +524,39 @@ export function HospitalProvider({ children }) {
     }
   }, []);
 
-  // ── Get a single hospital by its hospitalId string ─────────────────────────
   const getHospitalById = useCallback(
-    (hospitalId) => hospitals.find((h) => h.id === hospitalId || h.hospitalId === hospitalId),
+    (hospitalId) =>
+      hospitals.find((h) => h.id === hospitalId || h.hospitalId === hospitalId),
     [hospitals]
   );
 
   const getDepartmentImage = useCallback((departmentName) => {
-    return DEPARTMENT_IMAGES[departmentName] ||
-      "https://cdn-icons-png.flaticon.com/512/2966/2966327.png";
+    return (
+      DEPARTMENT_IMAGES[departmentName] ||
+      "https://cdn-icons-png.flaticon.com/512/2966/2966327.png"
+    );
   }, []);
 
   const value = {
-    hospitals,           // all approved hospitals from backend
+    hospitals,
     loading,
     error,
-    loadHospitals,       // call this to refresh
+    loadHospitals,
 
+    // Staff state & actions
+    staffHospitalData,
+    feedbacks,
+    setStaffSession,
+    clearStaffSession,
+    updateHospitalProfile,
+    updateDoctorTimings,
+    refreshDoctors,
+    refreshFeedbacks,
+
+    // Data Helpers
     getHospitalById,
     getDoctorsByHospital,
+    getDepartmentsByHospital,
     getDepartmentImage,
 
     defaultDoctorTimings,
@@ -482,6 +573,7 @@ export function HospitalProvider({ children }) {
 
 export function useHospital() {
   const context = useContext(HospitalContext);
-  if (!context) throw new Error("useHospital must be used inside HospitalProvider");
+  if (!context)
+    throw new Error("useHospital must be used inside HospitalProvider");
   return context;
 }

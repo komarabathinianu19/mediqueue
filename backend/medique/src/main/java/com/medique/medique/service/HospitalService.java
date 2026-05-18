@@ -1,9 +1,13 @@
+
+
+
 // package com.medique.medique.service;
 
 // import com.medique.medique.dto.HospitalRegisterRequest;
 // import com.medique.medique.entity.Hospital;
 // import com.medique.medique.entity.HospitalStatus;
 // import com.medique.medique.repository.HospitalRepository;
+
 // import org.springframework.security.crypto.password.PasswordEncoder;
 // import org.springframework.stereotype.Service;
 
@@ -16,113 +20,254 @@
 //     private final HospitalRepository hospitalRepo;
 //     private final PasswordEncoder passwordEncoder;
 
-//     public HospitalService(HospitalRepository hospitalRepo, PasswordEncoder passwordEncoder) {
+//     public HospitalService(
+//             HospitalRepository hospitalRepo,
+//             PasswordEncoder passwordEncoder
+//     ) {
 //         this.hospitalRepo = hospitalRepo;
 //         this.passwordEncoder = passwordEncoder;
 //     }
 
-//     // ── REGISTER ──────────────────────────────────────────────────────────────
+//     // ───────────────── REGISTER HOSPITAL ─────────────────
+
 //     public Hospital register(HospitalRegisterRequest req) {
-//         if (req.getName() == null || req.getName().isBlank())
+
+//         if (req.getName() == null || req.getName().isBlank()) {
 //             throw new RuntimeException("Hospital name is required.");
-//         if (req.getEmail() == null || req.getEmail().isBlank())
+//         }
+
+//         if (req.getEmail() == null || req.getEmail().isBlank()) {
 //             throw new RuntimeException("Email is required.");
-//         if (req.getPassword() == null || req.getPassword().length() < 6)
-//             throw new RuntimeException("Password must be at least 6 characters.");
-//         if (req.getPhone() == null || req.getPhone().isBlank())
+//         }
+
+//         if (req.getPassword() == null || req.getPassword().length() < 6) {
+//             throw new RuntimeException(
+//                     "Password must be at least 6 characters."
+//             );
+//         }
+
+//         if (req.getPhone() == null || req.getPhone().isBlank()) {
 //             throw new RuntimeException("Phone number is required.");
-//         if (req.getLicenseNumber() == null || req.getLicenseNumber().isBlank())
+//         }
+
+//         if (req.getLicenseNumber() == null
+//                 || req.getLicenseNumber().isBlank()) {
+
 //             throw new RuntimeException("License number is required.");
-//         if (hospitalRepo.existsByEmail(req.getEmail()))
-//             throw new RuntimeException("Email is already registered.");
+//         }
 
-//         Hospital h = new Hospital();
-//         h.setHospitalId(generateUniqueHospitalId());
-//         h.setName(req.getName());
-//         h.setOwnerName(req.getOwnerName());
-//         h.setPhone(req.getPhone());
-//         h.setEmail(req.getEmail());
-//         h.setPassword(passwordEncoder.encode(req.getPassword()));
-//         h.setType(req.getType());
-//         h.setAddress(req.getAddress());
-//         h.setCity(req.getCity());
-//         h.setRegistrationNumber(req.getRegistrationNumber());
-//         h.setLicenseNumber(req.getLicenseNumber());
-//         // Store departments as comma-separated string: "General OPD,Cardiology,ENT"
-//         h.setDepartments(req.getDepartments());
-//         h.setNumberOfDoctors(req.getNumberOfDoctors());
-//         h.setImageUrl(req.getImageUrl());
-//         h.setStatus(HospitalStatus.PENDING);
-//         return hospitalRepo.save(h);
+//         if (hospitalRepo.existsByEmail(req.getEmail())) {
+//             throw new RuntimeException("Email already registered.");
+//         }
+
+//         Hospital hospital = new Hospital();
+
+//         hospital.setHospitalId(generateUniqueHospitalId());
+
+//         hospital.setName(req.getName());
+//         hospital.setOwnerName(req.getOwnerName());
+
+//         hospital.setEmail(req.getEmail());
+//         hospital.setPhone(req.getPhone());
+
+//         hospital.setPassword(
+//                 passwordEncoder.encode(req.getPassword())
+//         );
+
+//         hospital.setType(req.getType());
+
+//         hospital.setAddress(req.getAddress());
+//         hospital.setCity(req.getCity());
+
+//         hospital.setRegistrationNumber(
+//                 req.getRegistrationNumber()
+//         );
+
+//         hospital.setLicenseNumber(
+//                 req.getLicenseNumber()
+//         );
+
+//         // Example:
+//         // "General OPD,Cardiology,ENT"
+
+//         hospital.setDepartments(req.getDepartments());
+
+//         hospital.setNumberOfDoctors(
+//                 req.getNumberOfDoctors()
+//         );
+
+//         hospital.setImageUrl(req.getImageUrl());
+
+//         // Default status
+//         hospital.setStatus(HospitalStatus.PENDING);
+
+//         return hospitalRepo.save(hospital);
 //     }
 
-//     // ── APPROVE ───────────────────────────────────────────────────────────────
+//     // ───────────────── APPROVE HOSPITAL ─────────────────
+
 //     public Hospital approve(String hospitalId) {
-//         Hospital h = hospitalRepo.findByHospitalId(hospitalId)
-//                 .orElseThrow(() -> new RuntimeException("Hospital not found: " + hospitalId));
-//         h.setStatus(HospitalStatus.APPROVED);
-//         return hospitalRepo.save(h);
+
+//         Hospital hospital = hospitalRepo
+//                 .findByHospitalId(hospitalId)
+//                 .orElseThrow(() ->
+//                         new RuntimeException(
+//                                 "Hospital not found: " + hospitalId
+//                         ));
+
+//         hospital.setStatus(HospitalStatus.APPROVED);
+
+//         return hospitalRepo.save(hospital);
 //     }
 
-//     // ── REJECT ────────────────────────────────────────────────────────────────
+//     // ───────────────── REJECT HOSPITAL ─────────────────
+
 //     public Hospital reject(String hospitalId) {
-//         Hospital h = hospitalRepo.findByHospitalId(hospitalId)
-//                 .orElseThrow(() -> new RuntimeException("Hospital not found: " + hospitalId));
-//         h.setStatus(HospitalStatus.REJECTED);
-//         return hospitalRepo.save(h);
+
+//         Hospital hospital = hospitalRepo
+//                 .findByHospitalId(hospitalId)
+//                 .orElseThrow(() ->
+//                         new RuntimeException(
+//                                 "Hospital not found: " + hospitalId
+//                         ));
+
+//         hospital.setStatus(HospitalStatus.REJECTED);
+
+//         return hospitalRepo.save(hospital);
 //     }
 
-//     // ── GET PENDING ───────────────────────────────────────────────────────────
+//     // ───────────────── GET PENDING HOSPITALS ─────────────────
+
 //     public List<Hospital> getPending() {
-//         return hospitalRepo.findByStatus(HospitalStatus.PENDING);
+//         return hospitalRepo.findByStatus(
+//                 HospitalStatus.PENDING
+//         );
 //     }
 
-//     // ── GET APPROVED (for patient hospital list) ───────────────────────────────
+//     // ───────────────── GET APPROVED HOSPITALS ─────────────────
+
 //     public List<Hospital> getApproved() {
-//         return hospitalRepo.findByStatus(HospitalStatus.APPROVED);
+//         return hospitalRepo.findByStatus(
+//                 HospitalStatus.APPROVED
+//         );
 //     }
 
-//     // ── GET ALL ───────────────────────────────────────────────────────────────
+//     // ───────────────── GET ALL HOSPITALS ─────────────────
+
 //     public List<Hospital> getAll() {
 //         return hospitalRepo.findAll();
 //     }
 
-//     // ── STAFF LOGIN ───────────────────────────────────────────────────────────
-//     public Hospital loginStaff(String hospitalId, String email, String password) {
-//         Hospital h = hospitalRepo.findByHospitalId(hospitalId)
-//                 .orElseThrow(() -> new RuntimeException("Invalid Hospital ID."));
-//         if (!h.getEmail().equalsIgnoreCase(email))
-//             throw new RuntimeException("Email does not match this Hospital ID.");
-//         if (!passwordEncoder.matches(password, h.getPassword()))
-//             throw new RuntimeException("Incorrect password.");
-//         if (h.getStatus() == HospitalStatus.PENDING)
-//             throw new RuntimeException("Your hospital is still pending admin approval.");
-//         if (h.getStatus() == HospitalStatus.REJECTED)
-//             throw new RuntimeException("Your hospital registration was rejected. Contact support.");
-//         return h;
+//     // ───────────────── HOSPITAL LOGIN ─────────────────
+
+//     public Hospital loginStaff(
+//             String hospitalId,
+//             String email,
+//             String password
+//     ) {
+
+//         Hospital hospital = hospitalRepo
+//                 .findByHospitalId(hospitalId)
+//                 .orElseThrow(() ->
+//                         new RuntimeException(
+//                                 "Invalid Hospital ID."
+//                         ));
+
+//         // Check email
+//         if (!hospital.getEmail().equalsIgnoreCase(email)) {
+
+//             throw new RuntimeException(
+//                     "Email does not match this Hospital ID."
+//             );
+//         }
+
+//         // Check password
+//         if (!passwordEncoder.matches(
+//                 password,
+//                 hospital.getPassword()
+//         )) {
+
+//             throw new RuntimeException(
+//                     "Incorrect password."
+//             );
+//         }
+
+//         // Check approval status
+//         if (hospital.getStatus() == HospitalStatus.PENDING) {
+
+//             throw new RuntimeException(
+//                     "Your hospital is still pending admin approval."
+//             );
+//         }
+
+//         if (hospital.getStatus() == HospitalStatus.REJECTED) {
+
+//             throw new RuntimeException(
+//                     "Your hospital registration was rejected."
+//             );
+//         }
+
+//         return hospital;
 //     }
 
-//     // ── GET SINGLE HOSPITAL ───────────────────────────────────────────────────
+//     // ───────────────── GET HOSPITAL BY HOSPITAL ID ─────────────────
+
 //     public Hospital getHospitalById(String hospitalId) {
-//         return hospitalRepo.findByHospitalId(hospitalId)
-//                 .orElseThrow(() -> new RuntimeException("Hospital not found"));
+
+//         return hospitalRepo
+//                 .findByHospitalId(hospitalId)
+//                 .orElseThrow(() ->
+//                         new RuntimeException(
+//                                 "Hospital not found"
+//                         ));
 //     }
 
-//     // ── GENERATE UNIQUE HOSPITAL ID ───────────────────────────────────────────
-//     private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-//     private static final SecureRandom RANDOM = new SecureRandom();
+//     // ───────────────── GET HOSPITAL BY EMAIL ─────────────────
+
+//     public Hospital getHospitalByEmail(String email) {
+
+//         return hospitalRepo
+//                 .findByEmail(email)
+//                 .orElseThrow(() ->
+//                         new RuntimeException(
+//                                 "Hospital not found with email: "
+//                                         + email
+//                         ));
+//     }
+
+//     // ───────────────── GENERATE UNIQUE HOSPITAL ID ─────────────────
+
+//     private static final String CHARS =
+//             "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+//     private static final SecureRandom RANDOM =
+//             new SecureRandom();
 
 //     private String generateUniqueHospitalId() {
+
 //         String id;
+
 //         do {
+
 //             StringBuilder sb = new StringBuilder("HSP-");
-//             for (int i = 0; i < 6; i++)
-//                 sb.append(CHARS.charAt(RANDOM.nextInt(CHARS.length())));
+
+//             for (int i = 0; i < 6; i++) {
+
+//                 sb.append(
+//                         CHARS.charAt(
+//                                 RANDOM.nextInt(CHARS.length())
+//                         )
+//                 );
+//             }
+
 //             id = sb.toString();
+
 //         } while (hospitalRepo.existsByHospitalId(id));
+
 //         return id;
 //     }
-// }  
+// }   
+
 
 
 
@@ -157,11 +302,13 @@
 // import com.medique.medique.entity.Hospital;
 // import com.medique.medique.entity.HospitalStatus;
 // import com.medique.medique.repository.HospitalRepository;
+
 // import org.springframework.security.crypto.password.PasswordEncoder;
 // import org.springframework.stereotype.Service;
 
 // import java.security.SecureRandom;
 // import java.util.List;
+// import java.util.Map;
 
 // @Service
 // public class HospitalService {
@@ -174,103 +321,97 @@
 //         this.passwordEncoder = passwordEncoder;
 //     }
 
-//     // ── REGISTER ──────────────────────────────────────────────────────────────
+//     // ───────────────── UPDATE HOSPITAL PROFILE (NEW) ─────────────────
+//     // This method handles the updates from the Staff Profile screen
+//     public Hospital updateHospitalProfile(String hospitalId, Map<String, Object> updates) {
+//         Hospital hospital = hospitalRepo.findByHospitalId(hospitalId)
+//                 .orElseThrow(() -> new RuntimeException("Hospital not found: " + hospitalId));
+
+//         if (updates.containsKey("name")) hospital.setName((String) updates.get("name"));
+//         if (updates.containsKey("phone")) hospital.setPhone((String) updates.get("phone"));
+//         if (updates.containsKey("address")) hospital.setAddress((String) updates.get("address"));
+//         if (updates.containsKey("city")) hospital.setCity((String) updates.get("city"));
+//         if (updates.containsKey("imageUrl")) hospital.setImageUrl((String) updates.get("imageUrl"));
+        
+//         // Handle the new staff-specific fields
+//         if (updates.containsKey("openingTime")) hospital.setOpeningTime((String) updates.get("openingTime"));
+//         if (updates.containsKey("closingTime")) hospital.setClosingTime((String) updates.get("closingTime"));
+//         if (updates.containsKey("description")) hospital.setDescription((String) updates.get("description"));
+
+//         return hospitalRepo.save(hospital);
+//     }
+
+//     // ───────────────── REGISTER HOSPITAL ─────────────────
 //     public Hospital register(HospitalRegisterRequest req) {
-//         if (req.getName() == null || req.getName().isBlank())
-//             throw new RuntimeException("Hospital name is required.");
-//         if (req.getEmail() == null || req.getEmail().isBlank())
-//             throw new RuntimeException("Email is required.");
-//         if (req.getPassword() == null || req.getPassword().length() < 6)
-//             throw new RuntimeException("Password must be at least 6 characters.");
-//         if (req.getPhone() == null || req.getPhone().isBlank())
-//             throw new RuntimeException("Phone number is required.");
-//         if (req.getLicenseNumber() == null || req.getLicenseNumber().isBlank())
-//             throw new RuntimeException("License number is required.");
-//         if (hospitalRepo.existsByEmail(req.getEmail()))
-//             throw new RuntimeException("Email is already registered.");
+//         if (req.getName() == null || req.getName().isBlank()) throw new RuntimeException("Hospital name is required.");
+//         if (req.getEmail() == null || req.getEmail().isBlank()) throw new RuntimeException("Email is required.");
+//         if (req.getPassword() == null || req.getPassword().length() < 6) throw new RuntimeException("Password must be at least 6 characters.");
+//         if (req.getPhone() == null || req.getPhone().isBlank()) throw new RuntimeException("Phone number is required.");
+//         if (req.getLicenseNumber() == null || req.getLicenseNumber().isBlank()) throw new RuntimeException("License number is required.");
+//         if (hospitalRepo.existsByEmail(req.getEmail())) throw new RuntimeException("Email already registered.");
 
-//         Hospital h = new Hospital();
-//         h.setHospitalId(generateUniqueHospitalId());
-//         h.setName(req.getName());
-//         h.setOwnerName(req.getOwnerName());
-//         h.setPhone(req.getPhone());
-//         h.setEmail(req.getEmail());
-//         h.setPassword(passwordEncoder.encode(req.getPassword()));
-//         h.setType(req.getType());
-//         h.setAddress(req.getAddress());
-//         h.setCity(req.getCity());
-//         h.setRegistrationNumber(req.getRegistrationNumber());
-//         h.setLicenseNumber(req.getLicenseNumber());
-//         // Store departments as comma-separated string: "General OPD,Cardiology,ENT"
-//         h.setDepartments(req.getDepartments());
-//         h.setNumberOfDoctors(req.getNumberOfDoctors());
-//         h.setImageUrl(req.getImageUrl());
-//         h.setStatus(HospitalStatus.PENDING);
-//         return hospitalRepo.save(h);
+//         Hospital hospital = new Hospital();
+//         hospital.setHospitalId(generateUniqueHospitalId());
+//         hospital.setName(req.getName());
+//         hospital.setOwnerName(req.getOwnerName());
+//         hospital.setEmail(req.getEmail());
+//         hospital.setPhone(req.getPhone());
+//         hospital.setPassword(passwordEncoder.encode(req.getPassword()));
+//         hospital.setType(req.getType());
+//         hospital.setAddress(req.getAddress());
+//         hospital.setCity(req.getCity());
+//         hospital.setRegistrationNumber(req.getRegistrationNumber());
+//         hospital.setLicenseNumber(req.getLicenseNumber());
+//         hospital.setDepartments(req.getDepartments());
+//         hospital.setNumberOfDoctors(req.getNumberOfDoctors());
+//         hospital.setImageUrl(req.getImageUrl());
+//         hospital.setStatus(HospitalStatus.PENDING);
+
+//         return hospitalRepo.save(hospital);
 //     }
 
-//     // ── APPROVE ───────────────────────────────────────────────────────────────
-//     public Hospital approve(String hospitalId) {
-//         Hospital h = hospitalRepo.findByHospitalId(hospitalId)
-//                 .orElseThrow(() -> new RuntimeException("Hospital not found: " + hospitalId));
-//         h.setStatus(HospitalStatus.APPROVED);
-//         return hospitalRepo.save(h);
-//     }
+//     // ───────────────── AUTH & FETCH LOGIC ─────────────────
 
-//     // ── REJECT ────────────────────────────────────────────────────────────────
-//     public Hospital reject(String hospitalId) {
-//         Hospital h = hospitalRepo.findByHospitalId(hospitalId)
-//                 .orElseThrow(() -> new RuntimeException("Hospital not found: " + hospitalId));
-//         h.setStatus(HospitalStatus.REJECTED);
-//         return hospitalRepo.save(h);
-//     }
-
-//     // ── GET PENDING ───────────────────────────────────────────────────────────
-//     // public List<Hospital> getPending() {
-//     //     return hospitalRepo.findByStatus(HospitalStatus.PENDING);
-//     // } 
-
-// public List<Hospital> getPending() {
-//     return hospitalRepo.findByStatus(HospitalStatus.PENDING);
-// }
-
-// public List<Hospital> getApproved() {
-//     return hospitalRepo.findByStatus(HospitalStatus.APPROVED);
-// }
-
-//     // ── GET ALL ───────────────────────────────────────────────────────────────
-//     public List<Hospital> getAll() {
-//         return hospitalRepo.findAll();
-//     }
-
-//     // ── STAFF LOGIN ───────────────────────────────────────────────────────────
 //     public Hospital loginStaff(String hospitalId, String email, String password) {
-//         Hospital h = hospitalRepo.findByHospitalId(hospitalId)
+//         Hospital hospital = hospitalRepo.findByHospitalId(hospitalId)
 //                 .orElseThrow(() -> new RuntimeException("Invalid Hospital ID."));
-//         if (!h.getEmail().equalsIgnoreCase(email))
-//             throw new RuntimeException("Email does not match this Hospital ID.");
-//         if (!passwordEncoder.matches(password, h.getPassword()))
-//             throw new RuntimeException("Incorrect password.");
-//         if (h.getStatus() == HospitalStatus.PENDING)
-//             throw new RuntimeException("Your hospital is still pending admin approval.");
-//         if (h.getStatus() == HospitalStatus.REJECTED)
-//             throw new RuntimeException("Your hospital registration was rejected. Contact support.");
-//         return h;
+
+//         if (!hospital.getEmail().equalsIgnoreCase(email)) throw new RuntimeException("Email does not match this Hospital ID.");
+//         if (!passwordEncoder.matches(password, hospital.getPassword())) throw new RuntimeException("Incorrect password.");
+//         if (hospital.getStatus() == HospitalStatus.PENDING) throw new RuntimeException("Your hospital is still pending admin approval.");
+//         if (hospital.getStatus() == HospitalStatus.REJECTED) throw new RuntimeException("Your hospital registration was rejected.");
+
+//         return hospital;
 //     }
 
-//     // ── GET SINGLE HOSPITAL ───────────────────────────────────────────────────
+//     public Hospital approve(String hospitalId) {
+//         Hospital hospital = getHospitalById(hospitalId);
+//         hospital.setStatus(HospitalStatus.APPROVED);
+//         return hospitalRepo.save(hospital);
+//     }
+
+//     public Hospital reject(String hospitalId) {
+//         Hospital hospital = getHospitalById(hospitalId);
+//         hospital.setStatus(HospitalStatus.REJECTED);
+//         return hospitalRepo.save(hospital);
+//     }
+
+//     public List<Hospital> getPending() { return hospitalRepo.findByStatus(HospitalStatus.PENDING); }
+//     public List<Hospital> getApproved() { return hospitalRepo.findByStatus(HospitalStatus.APPROVED); }
+//     public List<Hospital> getAll() { return hospitalRepo.findAll(); }
+
 //     public Hospital getHospitalById(String hospitalId) {
 //         return hospitalRepo.findByHospitalId(hospitalId)
 //                 .orElseThrow(() -> new RuntimeException("Hospital not found"));
 //     }
 
-//     // ── GET HOSPITAL BY EMAIL ────────────────────────────────────────────────
 //     public Hospital getHospitalByEmail(String email) {
 //         return hospitalRepo.findByEmail(email)
 //                 .orElseThrow(() -> new RuntimeException("Hospital not found with email: " + email));
 //     }
 
-//     // ── GENERATE UNIQUE HOSPITAL ID ───────────────────────────────────────────
+//     // ───────────────── ID GENERATION ─────────────────
+
 //     private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 //     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -278,15 +419,474 @@
 //         String id;
 //         do {
 //             StringBuilder sb = new StringBuilder("HSP-");
-//             for (int i = 0; i < 6; i++)
+//             for (int i = 0; i < 6; i++) {
 //                 sb.append(CHARS.charAt(RANDOM.nextInt(CHARS.length())));
+//             }
 //             id = sb.toString();
 //         } while (hospitalRepo.existsByHospitalId(id));
 //         return id;
-//     } 
-
-
+//     }
 // }  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// package com.medique.medique.service;
+
+// import com.medique.medique.dto.HospitalRegisterRequest;
+// import com.medique.medique.entity.Hospital;
+// import com.medique.medique.entity.HospitalStatus;
+// import com.medique.medique.repository.HospitalRepository;
+
+// import org.springframework.security.crypto.password.PasswordEncoder;
+// import org.springframework.stereotype.Service;
+
+// import java.security.SecureRandom;
+// import java.util.List;
+
+// @Service
+// public class HospitalService {
+
+//     private final HospitalRepository hospitalRepo;
+//     private final PasswordEncoder passwordEncoder;
+
+//     public HospitalService(
+//             HospitalRepository hospitalRepo,
+//             PasswordEncoder passwordEncoder
+//     ) {
+//         this.hospitalRepo = hospitalRepo;
+//         this.passwordEncoder = passwordEncoder;
+//     }
+
+//     // ───────────────── REGISTER HOSPITAL ─────────────────
+
+//     public Hospital register(HospitalRegisterRequest req) {
+
+//         if (req.getName() == null || req.getName().isBlank()) {
+//             throw new RuntimeException("Hospital name is required.");
+//         }
+
+//         if (req.getEmail() == null || req.getEmail().isBlank()) {
+//             throw new RuntimeException("Email is required.");
+//         }
+
+//         if (req.getPassword() == null || req.getPassword().length() < 6) {
+//             throw new RuntimeException(
+//                     "Password must be at least 6 characters."
+//             );
+//         }
+
+//         if (req.getPhone() == null || req.getPhone().isBlank()) {
+//             throw new RuntimeException("Phone number is required.");
+//         }
+
+//         if (req.getLicenseNumber() == null
+//                 || req.getLicenseNumber().isBlank()) {
+
+//             throw new RuntimeException("License number is required.");
+//         }
+
+//         if (hospitalRepo.existsByEmail(req.getEmail())) {
+//             throw new RuntimeException("Email already registered.");
+//         }
+
+//         Hospital hospital = new Hospital();
+
+//         hospital.setHospitalId(generateUniqueHospitalId());
+
+//         hospital.setName(req.getName());
+//         hospital.setOwnerName(req.getOwnerName());
+
+//         hospital.setEmail(req.getEmail());
+//         hospital.setPhone(req.getPhone());
+
+//         hospital.setPassword(
+//                 passwordEncoder.encode(req.getPassword())
+//         );
+
+//         hospital.setType(req.getType());
+
+//         hospital.setAddress(req.getAddress());
+//         hospital.setCity(req.getCity());
+
+//         hospital.setRegistrationNumber(
+//                 req.getRegistrationNumber()
+//         );
+
+//         hospital.setLicenseNumber(
+//                 req.getLicenseNumber()
+//         );
+
+//         // Example:
+//         // "General OPD,Cardiology,ENT"
+
+//         hospital.setDepartments(req.getDepartments());
+
+//         hospital.setNumberOfDoctors(
+//                 req.getNumberOfDoctors()
+//         );
+
+//         hospital.setImageUrl(req.getImageUrl());
+
+//         // Default status
+//         hospital.setStatus(HospitalStatus.PENDING);
+
+//         return hospitalRepo.save(hospital);
+//     }
+
+//     // ───────────────── APPROVE HOSPITAL ─────────────────
+
+//     public Hospital approve(String hospitalId) {
+
+//         Hospital hospital = hospitalRepo
+//                 .findByHospitalId(hospitalId)
+//                 .orElseThrow(() ->
+//                         new RuntimeException(
+//                                 "Hospital not found: " + hospitalId
+//                         ));
+
+//         hospital.setStatus(HospitalStatus.APPROVED);
+
+//         return hospitalRepo.save(hospital);
+//     }
+
+//     // ───────────────── REJECT HOSPITAL ─────────────────
+
+//     public Hospital reject(String hospitalId) {
+
+//         Hospital hospital = hospitalRepo
+//                 .findByHospitalId(hospitalId)
+//                 .orElseThrow(() ->
+//                         new RuntimeException(
+//                                 "Hospital not found: " + hospitalId
+//                         ));
+
+//         hospital.setStatus(HospitalStatus.REJECTED);
+
+//         return hospitalRepo.save(hospital);
+//     }
+
+//     // ───────────────── GET PENDING HOSPITALS ─────────────────
+
+//     public List<Hospital> getPending() {
+//         return hospitalRepo.findByStatus(
+//                 HospitalStatus.PENDING
+//         );
+//     }
+
+//     // ───────────────── GET APPROVED HOSPITALS ─────────────────
+
+//     public List<Hospital> getApproved() {
+//         return hospitalRepo.findByStatus(
+//                 HospitalStatus.APPROVED
+//         );
+//     }
+
+//     // ───────────────── GET ALL HOSPITALS ─────────────────
+
+//     public List<Hospital> getAll() {
+//         return hospitalRepo.findAll();
+//     }
+
+//     // ───────────────── HOSPITAL LOGIN ─────────────────
+
+//     public Hospital loginStaff(
+//             String hospitalId,
+//             String email,
+//             String password
+//     ) {
+
+//         Hospital hospital = hospitalRepo
+//                 .findByHospitalId(hospitalId)
+//                 .orElseThrow(() ->
+//                         new RuntimeException(
+//                                 "Invalid Hospital ID."
+//                         ));
+
+//         // Check email
+//         if (!hospital.getEmail().equalsIgnoreCase(email)) {
+
+//             throw new RuntimeException(
+//                     "Email does not match this Hospital ID."
+//             );
+//         }
+
+//         // Check password
+//         if (!passwordEncoder.matches(
+//                 password,
+//                 hospital.getPassword()
+//         )) {
+
+//             throw new RuntimeException(
+//                     "Incorrect password."
+//             );
+//         }
+
+//         // Check approval status
+//         if (hospital.getStatus() == HospitalStatus.PENDING) {
+
+//             throw new RuntimeException(
+//                     "Your hospital is still pending admin approval."
+//             );
+//         }
+
+//         if (hospital.getStatus() == HospitalStatus.REJECTED) {
+
+//             throw new RuntimeException(
+//                     "Your hospital registration was rejected."
+//             );
+//         }
+
+//         return hospital;
+//     }
+
+//     // ───────────────── GET HOSPITAL BY HOSPITAL ID ─────────────────
+
+//     public Hospital getHospitalById(String hospitalId) {
+
+//         return hospitalRepo
+//                 .findByHospitalId(hospitalId)
+//                 .orElseThrow(() ->
+//                         new RuntimeException(
+//                                 "Hospital not found"
+//                         ));
+//     }
+
+//     // ───────────────── GET HOSPITAL BY EMAIL ─────────────────
+
+//     public Hospital getHospitalByEmail(String email) {
+
+//         return hospitalRepo
+//                 .findByEmail(email)
+//                 .orElseThrow(() ->
+//                         new RuntimeException(
+//                                 "Hospital not found with email: "
+//                                         + email
+//                         ));
+//     }
+
+//     // ───────────────── GENERATE UNIQUE HOSPITAL ID ─────────────────
+
+//     private static final String CHARS =
+//             "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+//     private static final SecureRandom RANDOM =
+//             new SecureRandom();
+
+//     private String generateUniqueHospitalId() {
+
+//         String id;
+
+//         do {
+
+//             StringBuilder sb = new StringBuilder("HSP-");
+
+//             for (int i = 0; i < 6; i++) {
+
+//                 sb.append(
+//                         CHARS.charAt(
+//                                 RANDOM.nextInt(CHARS.length())
+//                         )
+//                 );
+//             }
+
+//             id = sb.toString();
+
+//         } while (hospitalRepo.existsByHospitalId(id));
+
+//         return id;
+//     }
+// }   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// package com.medique.medique.service;
+
+// import com.medique.medique.dto.HospitalRegisterRequest;
+// import com.medique.medique.entity.Hospital;
+// import com.medique.medique.entity.HospitalStatus;
+// import com.medique.medique.repository.HospitalRepository;
+
+// import org.springframework.security.crypto.password.PasswordEncoder;
+// import org.springframework.stereotype.Service;
+
+// import java.security.SecureRandom;
+// import java.util.List;
+// import java.util.Map;
+
+// @Service
+// public class HospitalService {
+
+//     private final HospitalRepository hospitalRepo;
+//     private final PasswordEncoder passwordEncoder;
+
+//     public HospitalService(HospitalRepository hospitalRepo, PasswordEncoder passwordEncoder) {
+//         this.hospitalRepo = hospitalRepo;
+//         this.passwordEncoder = passwordEncoder;
+//     }
+
+//     // ───────────────── UPDATE HOSPITAL PROFILE (NEW) ─────────────────
+//     // This method handles the updates from the Staff Profile screen
+//     public Hospital updateHospitalProfile(String hospitalId, Map<String, Object> updates) {
+//         Hospital hospital = hospitalRepo.findByHospitalId(hospitalId)
+//                 .orElseThrow(() -> new RuntimeException("Hospital not found: " + hospitalId));
+
+//         if (updates.containsKey("name")) hospital.setName((String) updates.get("name"));
+//         if (updates.containsKey("phone")) hospital.setPhone((String) updates.get("phone"));
+//         if (updates.containsKey("address")) hospital.setAddress((String) updates.get("address"));
+//         if (updates.containsKey("city")) hospital.setCity((String) updates.get("city"));
+//         if (updates.containsKey("imageUrl")) hospital.setImageUrl((String) updates.get("imageUrl"));
+        
+//         // Handle the new staff-specific fields
+//         if (updates.containsKey("openingTime")) hospital.setOpeningTime((String) updates.get("openingTime"));
+//         if (updates.containsKey("closingTime")) hospital.setClosingTime((String) updates.get("closingTime"));
+//         if (updates.containsKey("description")) hospital.setDescription((String) updates.get("description"));
+
+//         return hospitalRepo.save(hospital);
+//     }
+
+//     // ───────────────── REGISTER HOSPITAL ─────────────────
+//     public Hospital register(HospitalRegisterRequest req) {
+//         if (req.getName() == null || req.getName().isBlank()) throw new RuntimeException("Hospital name is required.");
+//         if (req.getEmail() == null || req.getEmail().isBlank()) throw new RuntimeException("Email is required.");
+//         if (req.getPassword() == null || req.getPassword().length() < 6) throw new RuntimeException("Password must be at least 6 characters.");
+//         if (req.getPhone() == null || req.getPhone().isBlank()) throw new RuntimeException("Phone number is required.");
+//         if (req.getLicenseNumber() == null || req.getLicenseNumber().isBlank()) throw new RuntimeException("License number is required.");
+//         if (hospitalRepo.existsByEmail(req.getEmail())) throw new RuntimeException("Email already registered.");
+
+//         Hospital hospital = new Hospital();
+//         hospital.setHospitalId(generateUniqueHospitalId());
+//         hospital.setName(req.getName());
+//         hospital.setOwnerName(req.getOwnerName());
+//         hospital.setEmail(req.getEmail());
+//         hospital.setPhone(req.getPhone());
+//         hospital.setPassword(passwordEncoder.encode(req.getPassword()));
+//         hospital.setType(req.getType());
+//         hospital.setAddress(req.getAddress());
+//         hospital.setCity(req.getCity());
+//         hospital.setRegistrationNumber(req.getRegistrationNumber());
+//         hospital.setLicenseNumber(req.getLicenseNumber());
+//         hospital.setDepartments(req.getDepartments());
+//         hospital.setNumberOfDoctors(req.getNumberOfDoctors());
+//         hospital.setImageUrl(req.getImageUrl());
+//         hospital.setDocumentUrls(req.getDocumentUrls());
+//         hospital.setStatus(HospitalStatus.PENDING);
+
+//         return hospitalRepo.save(hospital);
+//     }
+
+//     // ───────────────── AUTH & FETCH LOGIC ─────────────────
+
+//     public Hospital loginStaff(String hospitalId, String email, String password) {
+//         Hospital hospital = hospitalRepo.findByHospitalId(hospitalId)
+//                 .orElseThrow(() -> new RuntimeException("Invalid Hospital ID."));
+
+//         if (!hospital.getEmail().equalsIgnoreCase(email)) throw new RuntimeException("Email does not match this Hospital ID.");
+//         if (!passwordEncoder.matches(password, hospital.getPassword())) throw new RuntimeException("Incorrect password.");
+//         if (hospital.getStatus() == HospitalStatus.PENDING) throw new RuntimeException("Your hospital is still pending admin approval.");
+//         if (hospital.getStatus() == HospitalStatus.REJECTED) throw new RuntimeException("Your hospital registration was rejected.");
+
+//         return hospital;
+//     }
+
+//     public Hospital approve(String hospitalId) {
+//         Hospital hospital = getHospitalById(hospitalId);
+//         hospital.setStatus(HospitalStatus.APPROVED);
+//         return hospitalRepo.save(hospital);
+//     }
+
+//     public Hospital reject(String hospitalId) {
+//         Hospital hospital = getHospitalById(hospitalId);
+//         hospital.setStatus(HospitalStatus.REJECTED);
+//         return hospitalRepo.save(hospital);
+//     }
+
+//     public List<Hospital> getPending() { return hospitalRepo.findByStatus(HospitalStatus.PENDING); }
+//     public List<Hospital> getApproved() { return hospitalRepo.findByStatus(HospitalStatus.APPROVED); }
+//     public List<Hospital> getAll() { return hospitalRepo.findAll(); }
+
+//     public Hospital getHospitalById(String hospitalId) {
+//         return hospitalRepo.findByHospitalId(hospitalId)
+//                 .orElseThrow(() -> new RuntimeException("Hospital not found"));
+//     }
+
+//     public Hospital getHospitalByEmail(String email) {
+//         return hospitalRepo.findByEmail(email)
+//                 .orElseThrow(() -> new RuntimeException("Hospital not found with email: " + email));
+//     }
+
+//     // ───────────────── ID GENERATION ─────────────────
+
+//     private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+//     private static final SecureRandom RANDOM = new SecureRandom();
+
+//     private String generateUniqueHospitalId() {
+//         String id;
+//         do {
+//             StringBuilder sb = new StringBuilder("HSP-");
+//             for (int i = 0; i < 6; i++) {
+//                 sb.append(CHARS.charAt(RANDOM.nextInt(CHARS.length())));
+//             }
+//             id = sb.toString();
+//         } while (hospitalRepo.existsByHospitalId(id));
+//         return id;
+//     }
+// }  
+
+
 
 
 
@@ -325,6 +925,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class HospitalService {
@@ -332,250 +933,123 @@ public class HospitalService {
     private final HospitalRepository hospitalRepo;
     private final PasswordEncoder passwordEncoder;
 
-    public HospitalService(
-            HospitalRepository hospitalRepo,
-            PasswordEncoder passwordEncoder
-    ) {
+    public HospitalService(HospitalRepository hospitalRepo, PasswordEncoder passwordEncoder) {
         this.hospitalRepo = hospitalRepo;
         this.passwordEncoder = passwordEncoder;
     }
 
-    // ───────────────── REGISTER HOSPITAL ─────────────────
+    public Hospital updateHospitalProfile(String hospitalId, Map<String, Object> updates) {
+        Hospital hospital = hospitalRepo.findByHospitalId(hospitalId)
+                .orElseThrow(() -> new RuntimeException("Hospital not found: " + hospitalId));
+
+        // Existing profile fields
+        if (updates.containsKey("name"))        hospital.setName((String) updates.get("name"));
+        if (updates.containsKey("phone"))       hospital.setPhone((String) updates.get("phone"));
+        if (updates.containsKey("address"))     hospital.setAddress((String) updates.get("address"));
+        if (updates.containsKey("city"))        hospital.setCity((String) updates.get("city"));
+        if (updates.containsKey("imageUrl"))    hospital.setImageUrl((String) updates.get("imageUrl"));
+        if (updates.containsKey("openingTime")) hospital.setOpeningTime((String) updates.get("openingTime"));
+        if (updates.containsKey("closingTime")) hospital.setClosingTime((String) updates.get("closingTime"));
+        if (updates.containsKey("description")) hospital.setDescription((String) updates.get("description"));
+
+        // ── Payment / Bank fields ──────────────────────────────────────────
+        if (updates.containsKey("upiId"))             hospital.setUpiId((String) updates.get("upiId"));
+        if (updates.containsKey("bankAccountName"))   hospital.setBankAccountName((String) updates.get("bankAccountName"));
+        if (updates.containsKey("bankAccountNumber")) hospital.setBankAccountNumber((String) updates.get("bankAccountNumber"));
+        if (updates.containsKey("bankIfsc"))          hospital.setBankIfsc((String) updates.get("bankIfsc"));
+        if (updates.containsKey("bankName"))          hospital.setBankName((String) updates.get("bankName"));
+        // ──────────────────────────────────────────────────────────────────
+
+        return hospitalRepo.save(hospital);
+    }
 
     public Hospital register(HospitalRegisterRequest req) {
-
-        if (req.getName() == null || req.getName().isBlank()) {
-            throw new RuntimeException("Hospital name is required.");
-        }
-
-        if (req.getEmail() == null || req.getEmail().isBlank()) {
-            throw new RuntimeException("Email is required.");
-        }
-
-        if (req.getPassword() == null || req.getPassword().length() < 6) {
-            throw new RuntimeException(
-                    "Password must be at least 6 characters."
-            );
-        }
-
-        if (req.getPhone() == null || req.getPhone().isBlank()) {
-            throw new RuntimeException("Phone number is required.");
-        }
-
-        if (req.getLicenseNumber() == null
-                || req.getLicenseNumber().isBlank()) {
-
-            throw new RuntimeException("License number is required.");
-        }
-
-        if (hospitalRepo.existsByEmail(req.getEmail())) {
-            throw new RuntimeException("Email already registered.");
-        }
+        if (req.getName() == null || req.getName().isBlank())           throw new RuntimeException("Hospital name is required.");
+        if (req.getEmail() == null || req.getEmail().isBlank())         throw new RuntimeException("Email is required.");
+        if (req.getPassword() == null || req.getPassword().length() < 6) throw new RuntimeException("Password must be at least 6 characters.");
+        if (req.getPhone() == null || req.getPhone().isBlank())         throw new RuntimeException("Phone number is required.");
+        if (req.getLicenseNumber() == null || req.getLicenseNumber().isBlank()) throw new RuntimeException("License number is required.");
+        if (hospitalRepo.existsByEmail(req.getEmail()))                 throw new RuntimeException("Email already registered.");
 
         Hospital hospital = new Hospital();
-
         hospital.setHospitalId(generateUniqueHospitalId());
-
         hospital.setName(req.getName());
         hospital.setOwnerName(req.getOwnerName());
-
         hospital.setEmail(req.getEmail());
         hospital.setPhone(req.getPhone());
-
-        hospital.setPassword(
-                passwordEncoder.encode(req.getPassword())
-        );
-
+        hospital.setPassword(passwordEncoder.encode(req.getPassword()));
         hospital.setType(req.getType());
-
         hospital.setAddress(req.getAddress());
         hospital.setCity(req.getCity());
-
-        hospital.setRegistrationNumber(
-                req.getRegistrationNumber()
-        );
-
-        hospital.setLicenseNumber(
-                req.getLicenseNumber()
-        );
-
-        // Example:
-        // "General OPD,Cardiology,ENT"
-
+        hospital.setRegistrationNumber(req.getRegistrationNumber());
+        hospital.setLicenseNumber(req.getLicenseNumber());
         hospital.setDepartments(req.getDepartments());
-
-        hospital.setNumberOfDoctors(
-                req.getNumberOfDoctors()
-        );
-
+        hospital.setNumberOfDoctors(req.getNumberOfDoctors());
         hospital.setImageUrl(req.getImageUrl());
-
-        // Default status
+        hospital.setDocumentUrls(req.getDocumentUrls());
         hospital.setStatus(HospitalStatus.PENDING);
 
-        return hospitalRepo.save(hospital);
-    }
-
-    // ───────────────── APPROVE HOSPITAL ─────────────────
-
-    public Hospital approve(String hospitalId) {
-
-        Hospital hospital = hospitalRepo
-                .findByHospitalId(hospitalId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Hospital not found: " + hospitalId
-                        ));
-
-        hospital.setStatus(HospitalStatus.APPROVED);
+        // ── Save bank/payment details if provided ──────────────────────────
+        if (req.getUpiId() != null)             hospital.setUpiId(req.getUpiId());
+        if (req.getBankAccountName() != null)   hospital.setBankAccountName(req.getBankAccountName());
+        if (req.getBankAccountNumber() != null) hospital.setBankAccountNumber(req.getBankAccountNumber());
+        if (req.getBankIfsc() != null)          hospital.setBankIfsc(req.getBankIfsc());
+        if (req.getBankName() != null)          hospital.setBankName(req.getBankName());
+        // ──────────────────────────────────────────────────────────────────
 
         return hospitalRepo.save(hospital);
     }
 
-    // ───────────────── REJECT HOSPITAL ─────────────────
+    public Hospital loginStaff(String hospitalId, String email, String password) {
+        Hospital hospital = hospitalRepo.findByHospitalId(hospitalId)
+                .orElseThrow(() -> new RuntimeException("Invalid Hospital ID."));
 
-    public Hospital reject(String hospitalId) {
-
-        Hospital hospital = hospitalRepo
-                .findByHospitalId(hospitalId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Hospital not found: " + hospitalId
-                        ));
-
-        hospital.setStatus(HospitalStatus.REJECTED);
-
-        return hospitalRepo.save(hospital);
-    }
-
-    // ───────────────── GET PENDING HOSPITALS ─────────────────
-
-    public List<Hospital> getPending() {
-        return hospitalRepo.findByStatus(
-                HospitalStatus.PENDING
-        );
-    }
-
-    // ───────────────── GET APPROVED HOSPITALS ─────────────────
-
-    public List<Hospital> getApproved() {
-        return hospitalRepo.findByStatus(
-                HospitalStatus.APPROVED
-        );
-    }
-
-    // ───────────────── GET ALL HOSPITALS ─────────────────
-
-    public List<Hospital> getAll() {
-        return hospitalRepo.findAll();
-    }
-
-    // ───────────────── HOSPITAL LOGIN ─────────────────
-
-    public Hospital loginStaff(
-            String hospitalId,
-            String email,
-            String password
-    ) {
-
-        Hospital hospital = hospitalRepo
-                .findByHospitalId(hospitalId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Invalid Hospital ID."
-                        ));
-
-        // Check email
-        if (!hospital.getEmail().equalsIgnoreCase(email)) {
-
-            throw new RuntimeException(
-                    "Email does not match this Hospital ID."
-            );
-        }
-
-        // Check password
-        if (!passwordEncoder.matches(
-                password,
-                hospital.getPassword()
-        )) {
-
-            throw new RuntimeException(
-                    "Incorrect password."
-            );
-        }
-
-        // Check approval status
-        if (hospital.getStatus() == HospitalStatus.PENDING) {
-
-            throw new RuntimeException(
-                    "Your hospital is still pending admin approval."
-            );
-        }
-
-        if (hospital.getStatus() == HospitalStatus.REJECTED) {
-
-            throw new RuntimeException(
-                    "Your hospital registration was rejected."
-            );
-        }
+        if (!hospital.getEmail().equalsIgnoreCase(email)) throw new RuntimeException("Email does not match this Hospital ID.");
+        if (!passwordEncoder.matches(password, hospital.getPassword())) throw new RuntimeException("Incorrect password.");
+        if (hospital.getStatus() == HospitalStatus.PENDING) throw new RuntimeException("Your hospital is still pending admin approval.");
+        if (hospital.getStatus() == HospitalStatus.REJECTED) throw new RuntimeException("Your hospital registration was rejected.");
 
         return hospital;
     }
 
-    // ───────────────── GET HOSPITAL BY HOSPITAL ID ─────────────────
+    public Hospital approve(String hospitalId) {
+        Hospital hospital = getHospitalById(hospitalId);
+        hospital.setStatus(HospitalStatus.APPROVED);
+        return hospitalRepo.save(hospital);
+    }
+
+    public Hospital reject(String hospitalId) {
+        Hospital hospital = getHospitalById(hospitalId);
+        hospital.setStatus(HospitalStatus.REJECTED);
+        return hospitalRepo.save(hospital);
+    }
+
+    public List<Hospital> getPending()  { return hospitalRepo.findByStatus(HospitalStatus.PENDING); }
+    public List<Hospital> getApproved() { return hospitalRepo.findByStatus(HospitalStatus.APPROVED); }
+    public List<Hospital> getAll()      { return hospitalRepo.findAll(); }
 
     public Hospital getHospitalById(String hospitalId) {
-
-        return hospitalRepo
-                .findByHospitalId(hospitalId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Hospital not found"
-                        ));
+        return hospitalRepo.findByHospitalId(hospitalId)
+                .orElseThrow(() -> new RuntimeException("Hospital not found"));
     }
-
-    // ───────────────── GET HOSPITAL BY EMAIL ─────────────────
 
     public Hospital getHospitalByEmail(String email) {
-
-        return hospitalRepo
-                .findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Hospital not found with email: "
-                                        + email
-                        ));
+        return hospitalRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Hospital not found with email: " + email));
     }
 
-    // ───────────────── GENERATE UNIQUE HOSPITAL ID ─────────────────
-
-    private static final String CHARS =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-    private static final SecureRandom RANDOM =
-            new SecureRandom();
+    private static final String CHARS  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private String generateUniqueHospitalId() {
-
         String id;
-
         do {
-
             StringBuilder sb = new StringBuilder("HSP-");
-
             for (int i = 0; i < 6; i++) {
-
-                sb.append(
-                        CHARS.charAt(
-                                RANDOM.nextInt(CHARS.length())
-                        )
-                );
+                sb.append(CHARS.charAt(RANDOM.nextInt(CHARS.length())));
             }
-
             id = sb.toString();
-
         } while (hospitalRepo.existsByHospitalId(id));
-
         return id;
     }
 }

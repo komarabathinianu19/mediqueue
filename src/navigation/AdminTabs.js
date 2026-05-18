@@ -29,7 +29,7 @@ export default function AdminTabs() {
             Pending: "time-outline",
             Approved: "business-outline",
             Bookings: "list-outline",
-            Complaints: "warning-outline",
+            
           };
           return <Ionicons name={icons[route.name]} size={size} color={color} />;
         },
@@ -39,7 +39,7 @@ export default function AdminTabs() {
       <Tab.Screen name="Pending" component={PendingHospitalsScreen} />
       <Tab.Screen name="Approved" component={ApprovedHospitalsScreen} />
       <Tab.Screen name="Bookings" component={BookingMonitorScreen} />
-      <Tab.Screen name="Complaints" component={ComplaintsScreen} />
+
     </Tab.Navigator>
   );
 }

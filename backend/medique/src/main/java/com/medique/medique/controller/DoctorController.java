@@ -122,14 +122,11 @@
 
 
 
-
-
-
-
 package com.medique.medique.controller;
 
 import com.medique.medique.entity.Doctor;
 import com.medique.medique.service.DoctorService;
+import com.medique.medique.dto.TimingRequestDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -147,67 +144,63 @@ public class DoctorController {
         this.doctorService = doctorService;
     }
 
-    // ── ADD DOCTOR (Staff/Admin) ──────────────────────────────────────────────
-    @PostMapping("/{hospitalId}")
-    public ResponseEntity<?> addDoctor(@PathVariable String hospitalId,
-                                        @RequestBody Map<String, Object> payload) {
+    // ── GET ALL DOCTORS FOR A HOSPITAL ────────────────────────────────────────
+    @GetMapping("/hospital/{hospitalId}")
+    public ResponseEntity<?> getDoctorsByHospital(@PathVariable String hospitalId) {
         try {
-            Doctor d = doctorService.addDoctor(hospitalId, payload);
-            return ResponseEntity.ok(d);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
-    }
-
-    // ── GET ALL DOCTORS FOR HOSPITAL ──────────────────────────────────────────
-    @GetMapping("/{hospitalId}")
-    public ResponseEntity<?> getDoctors(@PathVariable String hospitalId) {
-        try {
-            List<Doctor> doctors = doctorService.getDoctorsByHospital(hospitalId);
+            List<Doctor> doctors = doctorService.getByHospitalId(hospitalId);
             return ResponseEntity.ok(doctors);
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
     // ── GET DOCTORS BY DEPARTMENT ─────────────────────────────────────────────
-    @GetMapping("/{hospitalId}/department/{department}")
-    public ResponseEntity<?> getDoctorsByDept(@PathVariable String hospitalId,
-                                               @PathVariable String department) {
+    @GetMapping("/hospital/{hospitalId}/department/{department}")
+    public ResponseEntity<?> getDoctorsByDepartment(
+            @PathVariable String hospitalId,
+            @PathVariable String department) {
         try {
-            List<Doctor> doctors = doctorService.getDoctorsByDepartment(hospitalId, department);
+            List<Doctor> doctors = doctorService.getByHospitalAndDepartment(hospitalId, department);
             return ResponseEntity.ok(doctors);
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
-    // ── GET SINGLE DOCTOR ─────────────────────────────────────────────────────
-    @GetMapping("/single/{doctorId}")
-    public ResponseEntity<?> getDoctor(@PathVariable Long doctorId) {
+    // ── ADD DOCTOR ────────────────────────────────────────────────────────────
+    @PostMapping
+    public ResponseEntity<?> addDoctor(@RequestBody Doctor doctor) {
         try {
-            return ResponseEntity.ok(doctorService.getDoctorById(doctorId));
+            Doctor saved = doctorService.addDoctor(doctor);
+            return ResponseEntity.ok(saved);
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
-    // ── UPDATE TIMINGS ────────────────────────────────────────────────────────
+    // ── UPDATE DOCTOR ─────────────────────────────────────────────────────────
+    @PutMapping("/{doctorId}")
+    public ResponseEntity<?> updateDoctor(
+            @PathVariable Long doctorId,
+            @RequestBody Doctor updates) {
+        try {
+            Doctor updated = doctorService.updateDoctor(doctorId, updates);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    // ── UPDATE DOCTOR TIMINGS (This is the one your React app calls) ──────────
     @PutMapping("/{doctorId}/timings")
-    public ResponseEntity<?> updateTimings(@PathVariable Long doctorId,
-                                            @RequestBody Map<String, String> body) {
+    public ResponseEntity<?> updateDoctorTimings(
+            @PathVariable Long doctorId,
+            @RequestBody Map<String, TimingRequestDTO> timings) {
         try {
-            String timingsJson = body.get("timingsJson");
-            if (timingsJson == null)
-                return ResponseEntity.badRequest().body(Map.of("message", "timingsJson is required."));
-            Doctor d = doctorService.updateTimings(doctorId, timingsJson);
-            return ResponseEntity.ok(d);
+            doctorService.updateDoctorTimings(doctorId, timings);
+            return ResponseEntity.ok(Map.of("message", "Timings updated successfully!"));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
@@ -217,9 +210,8 @@ public class DoctorController {
     public ResponseEntity<?> deleteDoctor(@PathVariable Long doctorId) {
         try {
             doctorService.deleteDoctor(doctorId);
-            return ResponseEntity.ok(Map.of("message", "Doctor deleted."));
+            return ResponseEntity.ok(Map.of("message", "Doctor deleted successfully."));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }

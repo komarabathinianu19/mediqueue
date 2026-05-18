@@ -306,66 +306,6 @@ const renderItem = ({ item, index }) => (
         </View>
       </TouchableOpacity>
 
-      {/* RIGHT ACTIONS */}
-      <View style={styles.actionsCol}>
-        <View style={styles.pendingBadge}>
-          <Ionicons
-            name="time-outline"
-            size={12}
-            color="#F59E0B"
-          />
-
-          <Text style={styles.pendingText}>
-            Pending
-          </Text>
-        </View>
-
-        {actionLoading === item.hospitalId ? (
-          <ActivityIndicator
-            color={COLORS.staff}
-            size="small"
-            style={{ marginTop: 12 }}
-          />
-        ) : (
-          <>
-            <TouchableOpacity
-              style={styles.approveBtn}
-              onPress={() =>
-                handleApprove(item.hospitalId, item.name)
-              }
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="checkmark"
-                size={14}
-                color="#fff"
-              />
-
-              <Text style={styles.approveBtnText}>
-                Approve
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.rejectBtn}
-              onPress={() =>
-                handleReject(item.hospitalId, item.name)
-              }
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="close"
-                size={14}
-                color="#EF4444"
-              />
-
-              <Text style={styles.rejectBtnText}>
-                Reject
-              </Text>
-            </TouchableOpacity>
-          </>
-        )}
-      </View>
     </View>
   </MotiView>
 );

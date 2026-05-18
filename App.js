@@ -51,11 +51,11 @@ import RootNavigator from "./src/navigation/RootNavigator";
 import { HospitalProvider } from "./src/context/HospitalContext";
 import { QueueProvider } from "./src/context/QueueContext";
 import { FeedbackProvider } from "./src/context/FeedbackContext";
-import { ReportProvider } from "./src/context/ReportsContext";
+import { ReportsProvider } from "./src/context/ReportsContext";
 
 export default function App() {
   return (
-    <ReportProvider>
+    <ReportsProvider>
       <FeedbackProvider>
         <HospitalProvider>
           <QueueProvider>
@@ -65,6 +65,6 @@ export default function App() {
           </QueueProvider>
         </HospitalProvider>
       </FeedbackProvider>
-    </ReportProvider>
+    </ReportsProvider>
   );
 }

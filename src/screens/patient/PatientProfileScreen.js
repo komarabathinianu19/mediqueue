@@ -1,7 +1,28 @@
 
 
 
-// import React, { useState } from "react";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // src/screens/patient/PatientProfileScreen.js
+// // Shows real logged-in patient data fetched from backend
+
+// import React, { useState, useEffect, useCallback } from "react";
 // import {
 //   View,
 //   Text,
@@ -11,383 +32,924 @@
 //   Image,
 //   TextInput,
 //   Alert,
+//   ActivityIndicator,
+//   RefreshControl,
 // } from "react-native";
 // import * as ImagePicker from "expo-image-picker";
 // import { Ionicons } from "@expo/vector-icons";
 // import { COLORS } from "../../constants/colors";
 // import { CommonActions } from "@react-navigation/native";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { fetchMyProfile, updateMyProfile } from "../../services/apiService";
 
 // export default function PatientProfileScreen({ navigation }) {
-//   const [editMode, setEditMode] = useState(false);
+//   const [editMode, setEditMode]   = useState(false);
+//   const [loading, setLoading]     = useState(true);
+//   const [saving, setSaving]       = useState(false);
+//   const [refreshing, setRefreshing] = useState(false);
 
 //   const [profile, setProfile] = useState({
-//     name: "Priya Sharma",
-//     phone: "+91 98765 43210",
-//     age: "28 years",
-//     gender: "Female",
-//     bloodGroup: "O+",
-//     city: "Hyderabad",
-//     allergies: "No known allergies",
-//     medicalNotes: "Regular OPD visitor",
-//     emergencyContact: "+91 91234 56789",
-//     photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
+//     fullName:         "",
+//     phone:            "",
+//     email:            "",
+//     age:              "",
+//     gender:           "",
+//     bloodGroup:       "",
+//     city:             "",
+//     allergies:        "",
+//     medicalNotes:     "",
+//     emergencyContact: "",
+//     photo:            null,
 //   });
 
-//   const updateField = (key, value) => {
-//     setProfile((prev) => ({ ...prev, [key]: value }));
+//   const loadProfile = useCallback(async (isRefresh = false) => {
+//     try {
+//       if (!isRefresh) setLoading(true);
+//       const data = await fetchMyProfile();
+//       setProfile({
+//         fullName:         data.fullName        || "",
+//         phone:            data.phone           || "",
+//         email:            data.email           || "",
+//         age:              data.age             ? String(data.age) : "",
+//         gender:           data.gender          || "",
+//         bloodGroup:       data.bloodGroup      || "",
+//         city:             data.city            || "",
+//         allergies:        data.allergies       || "",
+//         medicalNotes:     data.medicalNotes    || "",
+//         emergencyContact: data.emergencyContact || "",
+//         photo:            data.photo           || null,
+//       });
+//     } catch (err) {
+//       console.log("ProfileScreen error:", err.message);
+//       Alert.alert("Error", "Could not load your profile. Please try again.");
+//     } finally {
+//       setLoading(false);
+//       setRefreshing(false);
+//     }
+//   }, []);
+
+//   useEffect(() => {
+//     loadProfile();
+//   }, []);
+
+//   const onRefresh = () => {
+//     setRefreshing(true);
+//     loadProfile(true);
 //   };
+
+//   const updateField = (key, value) =>
+//     setProfile((prev) => ({ ...prev, [key]: value }));
 
 //   const pickImage = async () => {
 //     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
 //     if (!permission.granted) {
 //       Alert.alert("Permission Required", "Please allow gallery access.");
 //       return;
 //     }
-
 //     const result = await ImagePicker.launchImageLibraryAsync({
 //       mediaTypes: ImagePicker.MediaTypeOptions.Images,
 //       quality: 0.8,
 //       allowsEditing: true,
 //       aspect: [1, 1],
 //     });
-
-//     if (!result.canceled) {
-//       updateField("photo", result.assets[0].uri);
-//     }
+//     if (!result.canceled) updateField("photo", result.assets[0].uri);
 //   };
 
-//   const saveProfile = () => {
-//     if (!profile.name.trim() || !profile.phone.trim()) {
-//       Alert.alert("Error", "Name and phone number are required.");
+//   const saveProfile = async () => {
+//     if (!profile.fullName.trim()) {
+//       Alert.alert("Error", "Full name is required.");
 //       return;
 //     }
-
-//     setEditMode(false);
-//     Alert.alert("Saved", "Profile updated successfully.");
+//     setSaving(true);
+//     try {
+//       await updateMyProfile({
+//         fullName:         profile.fullName,
+//         age:              profile.age ? parseInt(profile.age) : null,
+//         gender:           profile.gender,
+//         bloodGroup:       profile.bloodGroup,
+//         city:             profile.city,
+//         allergies:        profile.allergies,
+//         medicalNotes:     profile.medicalNotes,
+//         emergencyContact: profile.emergencyContact,
+//       });
+//       setEditMode(false);
+//       Alert.alert("Success", "Profile updated successfully!");
+//     } catch (err) {
+//       Alert.alert("Error", err.message || "Update failed.");
+//     } finally {
+//       setSaving(false);
+//     }
 //   };
 
-// const logout = () => {
-//   navigation.dispatch(
-//     CommonActions.reset({
-//       index: 0,
-//       routes: [{ name: "RoleSelect" }],
-//     })
-//   );
-// };
-//   return (
-//     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-//       <View style={styles.header}>
-//         <TouchableOpacity disabled={!editMode} onPress={pickImage}>
-//           <Image source={{ uri: profile.photo }} style={styles.avatar} />
+//   const logout = async () => {
+//     await AsyncStorage.clear();
+//     navigation.dispatch(
+//       CommonActions.reset({ index: 0, routes: [{ name: "RoleSelect" }] })
+//     );
+//   };
 
+//   if (loading) {
+//     return (
+//       <View style={styles.center}>
+//         <ActivityIndicator size="large" color={COLORS.primary} />
+//       </View>
+//     );
+//   }
+
+//   return (
+//     <ScrollView
+//       style={styles.container}
+//       showsVerticalScrollIndicator={false}
+//       refreshControl={
+//         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
+//       }
+//     >
+//       {/* ── AVATAR ── */}
+//       <View style={styles.avatarSection}>
+//         <TouchableOpacity
+//           onPress={editMode ? pickImage : null}
+//           activeOpacity={editMode ? 0.8 : 1}
+//         >
+//           {profile.photo ? (
+//             <Image source={{ uri: profile.photo }} style={styles.avatar} />
+//           ) : (
+//             <View style={styles.avatarPlaceholder}>
+//               <Ionicons name="person" size={48} color={COLORS.primary} />
+//             </View>
+//           )}
 //           {editMode && (
-//             <View style={styles.cameraBadge}>
+//             <View style={styles.cameraOverlay}>
 //               <Ionicons name="camera" size={18} color="#fff" />
 //             </View>
 //           )}
 //         </TouchableOpacity>
 
-//         {editMode ? (
-//           <>
-//             <EditInput
-//               value={profile.name}
-//               onChangeText={(v) => updateField("name", v)}
-//               big
-//             />
-//             <EditInput
-//               value={profile.phone}
-//               onChangeText={(v) => updateField("phone", v)}
-//               keyboardType="phone-pad"
-//             />
-//           </>
-//         ) : (
-//           <>
-//             <Text style={styles.name}>{profile.name}</Text>
-//             <Text style={styles.phone}>{profile.phone}</Text>
-//           </>
-//         )}
-
-//         <TouchableOpacity
-//           style={styles.editBtn}
-//           onPress={editMode ? saveProfile : () => setEditMode(true)}
-//         >
-//           <Ionicons
-//             name={editMode ? "save-outline" : "create-outline"}
-//             size={18}
-//             color={COLORS.primary}
-//           />
-//           <Text style={styles.editText}>{editMode ? "Save Profile" : "Edit Profile"}</Text>
-//         </TouchableOpacity>
+//         <Text style={styles.name}>{profile.fullName || "Patient"}</Text>
+//         <Text style={styles.subName}>{profile.phone || profile.email || ""}</Text>
 //       </View>
 
-//       <View style={styles.card}>
-//         <Text style={styles.sectionTitle}>Personal Details</Text>
+//       {/* ── EDIT TOGGLE ── */}
+//       <View style={styles.editRow}>
+//         {!editMode ? (
+//           <TouchableOpacity
+//             style={styles.editBtn}
+//             onPress={() => setEditMode(true)}
+//           >
+//             <Ionicons name="pencil-outline" size={16} color={COLORS.primary} />
+//             <Text style={styles.editBtnText}>Edit Profile</Text>
+//           </TouchableOpacity>
+//         ) : (
+//           <View style={styles.editActionRow}>
+//             <TouchableOpacity
+//               style={styles.cancelBtn}
+//               onPress={() => { setEditMode(false); loadProfile(); }}
+//             >
+//               <Text style={styles.cancelBtnText}>Cancel</Text>
+//             </TouchableOpacity>
+//             <TouchableOpacity
+//               style={styles.saveBtn}
+//               onPress={saveProfile}
+//               disabled={saving}
+//             >
+//               {saving ? (
+//                 <ActivityIndicator size="small" color="#fff" />
+//               ) : (
+//                 <Text style={styles.saveBtnText}>Save</Text>
+//               )}
+//             </TouchableOpacity>
+//           </View>
+//         )}
+//       </View>
 
-//         <Info
+//       {/* ── PERSONAL INFO ── */}
+//       <View style={styles.card}>
+//         <Text style={styles.sectionTitle}>Personal Information</Text>
+
+//         <ProfileField
+//           label="Full Name"
+//           icon="person-outline"
+//           value={profile.fullName}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("fullName", v)}
+//         />
+//         <ProfileField
+//           label="Phone"
+//           icon="call-outline"
+//           value={profile.phone}
+//           edit={false}  // phone is login credential — not editable
+//         />
+//         <ProfileField
+//           label="Email"
+//           icon="mail-outline"
+//           value={profile.email}
+//           edit={false}
+//         />
+//         <ProfileField
 //           label="Age"
-//           value={profile.age}
 //           icon="calendar-outline"
-//           editMode={editMode}
+//           value={profile.age}
+//           edit={editMode}
 //           onChangeText={(v) => updateField("age", v)}
+//           keyboardType="number-pad"
 //         />
-//         <Info
+//         <ProfileField
 //           label="Gender"
+//           icon="male-female-outline"
 //           value={profile.gender}
-//           icon="female-outline"
-//           editMode={editMode}
+//           edit={editMode}
 //           onChangeText={(v) => updateField("gender", v)}
+//           placeholder="Male / Female / Other"
 //         />
-//         <Info
+//         <ProfileField
 //           label="Blood Group"
-//           value={profile.bloodGroup}
 //           icon="water-outline"
-//           editMode={editMode}
+//           value={profile.bloodGroup}
+//           edit={editMode}
 //           onChangeText={(v) => updateField("bloodGroup", v)}
+//           placeholder="e.g. O+"
 //         />
-//         <Info
+//         <ProfileField
 //           label="City"
-//           value={profile.city}
 //           icon="location-outline"
-//           editMode={editMode}
+//           value={profile.city}
+//           edit={editMode}
 //           onChangeText={(v) => updateField("city", v)}
 //         />
 //       </View>
 
+//       {/* ── MEDICAL INFO ── */}
 //       <View style={styles.card}>
-//         <Text style={styles.sectionTitle}>Health Notes</Text>
+//         <Text style={styles.sectionTitle}>Medical Information</Text>
 
-//         <Info
+//         <ProfileField
 //           label="Allergies"
+//           icon="warning-outline"
 //           value={profile.allergies}
-//           icon="medkit-outline"
-//           editMode={editMode}
+//           edit={editMode}
 //           onChangeText={(v) => updateField("allergies", v)}
+//           placeholder="e.g. Penicillin, Dust"
+//           multiline
 //         />
-//         <Info
+//         <ProfileField
 //           label="Medical Notes"
-//           value={profile.medicalNotes}
 //           icon="document-text-outline"
-//           editMode={editMode}
+//           value={profile.medicalNotes}
+//           edit={editMode}
 //           onChangeText={(v) => updateField("medicalNotes", v)}
+//           placeholder="Any existing conditions, medications…"
+//           multiline
 //         />
-//         <Info
+//         <ProfileField
 //           label="Emergency Contact"
-//           value={profile.emergencyContact}
 //           icon="call-outline"
-//           editMode={editMode}
+//           value={profile.emergencyContact}
+//           edit={editMode}
 //           onChangeText={(v) => updateField("emergencyContact", v)}
+//           keyboardType="phone-pad"
 //         />
 //       </View>
 
-//       {editMode && (
-//         <TouchableOpacity style={styles.cancelBtn} onPress={() => setEditMode(false)}>
-//           <Text style={styles.cancelText}>Cancel Editing</Text>
-//         </TouchableOpacity>
-//       )}
-
+//       {/* ── LOGOUT ── */}
 //       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
-//         <Ionicons name="log-out-outline" size={20} color={COLORS.danger} />
+//         <Ionicons name="log-out-outline" size={20} color={COLORS.danger || "#EF4444"} />
+//         <Text style={styles.logoutText}>Logout</Text>
+//       </TouchableOpacity>
+
+//       <View style={{ height: 40 }} />
+//     </ScrollView>
+//   );
+// }
+
+// // ── ProfileField Component ─────────────────────────────────────────────────────
+// function ProfileField({ label, icon, value, edit, onChangeText, placeholder, keyboardType, multiline }) {
+//   return (
+//     <View style={fieldStyles.row}>
+//       <View style={fieldStyles.iconWrap}>
+//         <Ionicons name={icon} size={18} color={COLORS.primary} />
+//       </View>
+//       <View style={{ flex: 1 }}>
+//         <Text style={fieldStyles.label}>{label}</Text>
+//         {edit ? (
+//           <TextInput
+//             style={[fieldStyles.input, multiline && { height: 60 }]}
+//             value={value}
+//             onChangeText={onChangeText}
+//             placeholder={placeholder || label}
+//             placeholderTextColor={COLORS.muted}
+//             keyboardType={keyboardType || "default"}
+//             multiline={multiline}
+//           />
+//         ) : (
+//           <Text style={fieldStyles.value}>{value || "—"}</Text>
+//         )}
+//       </View>
+//     </View>
+//   );
+// }
+
+// // ── Styles ──────────────────────────────────────────────────────────────────────
+// const styles = StyleSheet.create({
+//   container: { flex: 1, backgroundColor: COLORS.background },
+//   center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: COLORS.background },
+//   avatarSection: { alignItems: "center", paddingTop: 60, paddingBottom: 20 },
+//   avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: COLORS.primary },
+//   avatarPlaceholder: {
+//     width: 100, height: 100, borderRadius: 50,
+//     backgroundColor: COLORS.lightBlue || "#EFF6FF",
+//     alignItems: "center", justifyContent: "center",
+//     borderWidth: 2, borderColor: COLORS.primary,
+//   },
+//   cameraOverlay: {
+//     position: "absolute", bottom: 0, right: 0,
+//     width: 32, height: 32, borderRadius: 16,
+//     backgroundColor: COLORS.primary,
+//     alignItems: "center", justifyContent: "center",
+//     borderWidth: 2, borderColor: "#fff",
+//   },
+//   name: { fontSize: 22, fontWeight: "900", color: COLORS.text, marginTop: 12 },
+//   subName: { color: COLORS.muted, marginTop: 4, fontSize: 14 },
+//   editRow: { paddingHorizontal: 20, marginBottom: 8 },
+//   editBtn: {
+//     flexDirection: "row", alignItems: "center", gap: 6,
+//     alignSelf: "flex-end",
+//     backgroundColor: COLORS.lightBlue || "#EFF6FF",
+//     paddingHorizontal: 16, paddingVertical: 8,
+//     borderRadius: 20, borderWidth: 1, borderColor: COLORS.primary,
+//   },
+//   editBtnText: { color: COLORS.primary, fontWeight: "800", fontSize: 14 },
+//   editActionRow: { flexDirection: "row", justifyContent: "flex-end", gap: 10 },
+//   cancelBtn: {
+//     paddingHorizontal: 20, paddingVertical: 10,
+//     borderRadius: 14, backgroundColor: COLORS.background,
+//     borderWidth: 1, borderColor: COLORS.border,
+//   },
+//   cancelBtnText: { color: COLORS.muted, fontWeight: "800" },
+//   saveBtn: {
+//     paddingHorizontal: 24, paddingVertical: 10,
+//     borderRadius: 14, backgroundColor: COLORS.primary,
+//     minWidth: 80, alignItems: "center",
+//   },
+//   saveBtnText: { color: "#fff", fontWeight: "900" },
+//   card: {
+//     marginHorizontal: 18, marginBottom: 16,
+//     backgroundColor: COLORS.card,
+//     borderRadius: 24, padding: 18,
+//     borderWidth: 1, borderColor: COLORS.border,
+//     elevation: 2,
+//   },
+//   sectionTitle: { fontSize: 16, fontWeight: "900", color: COLORS.text, marginBottom: 14 },
+//   logoutBtn: {
+//     marginHorizontal: 18, marginBottom: 12, height: 52,
+//     borderRadius: 18, backgroundColor: "#FEF2F2",
+//     alignItems: "center", justifyContent: "center",
+//     flexDirection: "row", gap: 8,
+//     borderWidth: 1, borderColor: "#FECACA",
+//   },
+//   logoutText: { color: COLORS.danger || "#EF4444", fontWeight: "900", fontSize: 15 },
+// });
+
+// const fieldStyles = StyleSheet.create({
+//   row: {
+//     flexDirection: "row", alignItems: "flex-start", gap: 12,
+//     paddingVertical: 10,
+//     borderBottomWidth: 1, borderBottomColor: COLORS.border,
+//   },
+//   iconWrap: { marginTop: 2, width: 24, alignItems: "center" },
+//   label: { fontSize: 11, color: COLORS.muted, fontWeight: "700", marginBottom: 2 },
+//   value: { fontSize: 15, fontWeight: "700", color: COLORS.text },
+//   input: {
+//     fontSize: 15, fontWeight: "700", color: COLORS.text,
+//     borderBottomWidth: 1, borderBottomColor: COLORS.primary,
+//     paddingVertical: 2,
+//   },
+// });  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // src/screens/patient/PatientProfileScreen.js
+// // Shows real logged-in patient data fetched from backend
+// // ── Reports button added → navigates to PatientReports ──
+
+// import React, { useState, useEffect, useCallback } from "react";
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   ScrollView,
+//   TouchableOpacity,
+//   Image,
+//   TextInput,
+//   Alert,
+//   ActivityIndicator,
+//   RefreshControl,
+// } from "react-native";
+// import * as ImagePicker from "expo-image-picker";
+// import { Ionicons } from "@expo/vector-icons";
+// import { COLORS } from "../../constants/colors";
+// import { CommonActions } from "@react-navigation/native";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { fetchMyProfile, updateMyProfile } from "../../services/apiService";
+
+// export default function PatientProfileScreen({ navigation }) {
+//   const [editMode, setEditMode]     = useState(false);
+//   const [loading, setLoading]       = useState(true);
+//   const [saving, setSaving]         = useState(false);
+//   const [refreshing, setRefreshing] = useState(false);
+
+//   const [profile, setProfile] = useState({
+//     fullName:         "",
+//     phone:            "",
+//     email:            "",
+//     age:              "",
+//     gender:           "",
+//     bloodGroup:       "",
+//     city:             "",
+//     allergies:        "",
+//     medicalNotes:     "",
+//     emergencyContact: "",
+//     photo:            null,
+//   });
+
+//   // ── Load profile from backend ───────────────────────────────────────────────
+//   const loadProfile = useCallback(async (isRefresh = false) => {
+//     try {
+//       if (!isRefresh) setLoading(true);
+//       const data = await fetchMyProfile();
+//       setProfile({
+//         fullName:         data.fullName         || "",
+//         phone:            data.phone            || "",
+//         email:            data.email            || "",
+//         age:              data.age              ? String(data.age) : "",
+//         gender:           data.gender           || "",
+//         bloodGroup:       data.bloodGroup       || "",
+//         city:             data.city             || "",
+//         allergies:        data.allergies        || "",
+//         medicalNotes:     data.medicalNotes     || "",
+//         emergencyContact: data.emergencyContact || "",
+//         photo:            data.photo            || null,
+//       });
+//     } catch (err) {
+//       console.log("ProfileScreen error:", err.message);
+//       Alert.alert("Error", "Could not load your profile. Please try again.");
+//     } finally {
+//       setLoading(false);
+//       setRefreshing(false);
+//     }
+//   }, []);
+
+//   useEffect(() => { loadProfile(); }, []);
+
+//   const onRefresh = () => { setRefreshing(true); loadProfile(true); };
+
+//   const updateField = (key, value) =>
+//     setProfile((prev) => ({ ...prev, [key]: value }));
+
+//   // ── Pick photo ──────────────────────────────────────────────────────────────
+//   const pickImage = async () => {
+//     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+//     if (!permission.granted) {
+//       Alert.alert("Permission Required", "Please allow gallery access.");
+//       return;
+//     }
+//     const result = await ImagePicker.launchImageLibraryAsync({
+//       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+//       quality: 0.8,
+//       allowsEditing: true,
+//       aspect: [1, 1],
+//     });
+//     if (!result.canceled) updateField("photo", result.assets[0].uri);
+//   };
+
+//   // ── Save profile ────────────────────────────────────────────────────────────
+//   const saveProfile = async () => {
+//     if (!profile.fullName.trim()) {
+//       Alert.alert("Error", "Full name is required.");
+//       return;
+//     }
+//     setSaving(true);
+//     try {
+//       await updateMyProfile({
+//         fullName:         profile.fullName,
+//         age:              profile.age ? parseInt(profile.age) : null,
+//         gender:           profile.gender,
+//         bloodGroup:       profile.bloodGroup,
+//         city:             profile.city,
+//         allergies:        profile.allergies,
+//         medicalNotes:     profile.medicalNotes,
+//         emergencyContact: profile.emergencyContact,
+//       });
+//       setEditMode(false);
+//       Alert.alert("Success", "Profile updated successfully!");
+//     } catch (err) {
+//       Alert.alert("Error", err.message || "Update failed.");
+//     } finally {
+//       setSaving(false);
+//     }
+//   };
+
+//   // ── Logout ──────────────────────────────────────────────────────────────────
+//   const logout = async () => {
+//     await AsyncStorage.clear();
+//     navigation.dispatch(
+//       CommonActions.reset({ index: 0, routes: [{ name: "RoleSelect" }] })
+//     );
+//   };
+
+//   // ── Loading state ───────────────────────────────────────────────────────────
+//   if (loading) {
+//     return (
+//       <View style={styles.center}>
+//         <ActivityIndicator size="large" color={COLORS.primary} />
+//       </View>
+//     );
+//   }
+
+//   return (
+//     <ScrollView
+//       style={styles.container}
+//       showsVerticalScrollIndicator={false}
+//       contentContainerStyle={{ paddingBottom: 40 }}
+//       refreshControl={
+//         <RefreshControl
+//           refreshing={refreshing}
+//           onRefresh={onRefresh}
+//           colors={[COLORS.primary]}
+//         />
+//       }
+//     >
+//       {/* ── AVATAR SECTION ── */}
+//       <View style={styles.avatarSection}>
+//         <TouchableOpacity
+//           onPress={editMode ? pickImage : null}
+//           activeOpacity={editMode ? 0.8 : 1}
+//         >
+//           {profile.photo ? (
+//             <Image source={{ uri: profile.photo }} style={styles.avatar} />
+//           ) : (
+//             <View style={styles.avatarPlaceholder}>
+//               <Ionicons name="person" size={48} color={COLORS.primary} />
+//             </View>
+//           )}
+//           {editMode && (
+//             <View style={styles.cameraOverlay}>
+//               <Ionicons name="camera" size={18} color="#fff" />
+//             </View>
+//           )}
+//         </TouchableOpacity>
+
+//         <Text style={styles.name}>{profile.fullName || "Patient"}</Text>
+//         <Text style={styles.subName}>{profile.phone || profile.email || ""}</Text>
+//       </View>
+
+//       {/* ── EDIT TOGGLE ── */}
+//       <View style={styles.editRow}>
+//         {!editMode ? (
+//           <TouchableOpacity
+//             style={styles.editBtn}
+//             onPress={() => setEditMode(true)}
+//           >
+//             <Ionicons name="pencil-outline" size={16} color={COLORS.primary} />
+//             <Text style={styles.editBtnText}>Edit Profile</Text>
+//           </TouchableOpacity>
+//         ) : (
+//           <View style={styles.editActionRow}>
+//             <TouchableOpacity
+//               style={styles.cancelBtn}
+//               onPress={() => { setEditMode(false); loadProfile(); }}
+//             >
+//               <Text style={styles.cancelBtnText}>Cancel</Text>
+//             </TouchableOpacity>
+//             <TouchableOpacity
+//               style={styles.saveBtn}
+//               onPress={saveProfile}
+//               disabled={saving}
+//             >
+//               {saving ? (
+//                 <ActivityIndicator size="small" color="#fff" />
+//               ) : (
+//                 <Text style={styles.saveBtnText}>Save</Text>
+//               )}
+//             </TouchableOpacity>
+//           </View>
+//         )}
+//       </View>
+
+//       {/* ── MY REPORTS BUTTON ── */}
+//       <TouchableOpacity
+//         activeOpacity={0.86}
+//         style={styles.reportsCard}
+//         onPress={() => navigation.navigate("PatientReports")}
+//       >
+//         <View style={styles.reportsIconBox}>
+//           <Ionicons name="folder-open-outline" size={26} color="#fff" />
+//         </View>
+
+//         <View style={{ flex: 1 }}>
+//           <Text style={styles.reportsTitle}>My Medical Reports</Text>
+//           <Text style={styles.reportsSub}>
+//             View, add and manage your lab reports, scans & prescriptions
+//           </Text>
+//         </View>
+
+//         <View style={styles.reportsChevron}>
+//           <Ionicons name="chevron-forward" size={18} color={COLORS.primary} />
+//         </View>
+//       </TouchableOpacity>
+
+//       {/* ── PERSONAL INFO ── */}
+//       <View style={styles.card}>
+//         <Text style={styles.sectionTitle}>Personal Information</Text>
+
+//         <ProfileField
+//           label="Full Name"
+//           icon="person-outline"
+//           value={profile.fullName}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("fullName", v)}
+//         />
+//         <ProfileField
+//           label="Phone"
+//           icon="call-outline"
+//           value={profile.phone}
+//           edit={false}
+//         />
+//         <ProfileField
+//           label="Email"
+//           icon="mail-outline"
+//           value={profile.email}
+//           edit={false}
+//         />
+//         <ProfileField
+//           label="Age"
+//           icon="calendar-outline"
+//           value={profile.age}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("age", v)}
+//           keyboardType="number-pad"
+//         />
+//         <ProfileField
+//           label="Gender"
+//           icon="male-female-outline"
+//           value={profile.gender}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("gender", v)}
+//           placeholder="Male / Female / Other"
+//         />
+//         <ProfileField
+//           label="Blood Group"
+//           icon="water-outline"
+//           value={profile.bloodGroup}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("bloodGroup", v)}
+//           placeholder="e.g. O+"
+//         />
+//         <ProfileField
+//           label="City"
+//           icon="location-outline"
+//           value={profile.city}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("city", v)}
+//         />
+//       </View>
+
+//       {/* ── MEDICAL INFO ── */}
+//       <View style={styles.card}>
+//         <Text style={styles.sectionTitle}>Medical Information</Text>
+
+//         <ProfileField
+//           label="Allergies"
+//           icon="warning-outline"
+//           value={profile.allergies}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("allergies", v)}
+//           placeholder="e.g. Penicillin, Dust"
+//           multiline
+//         />
+//         <ProfileField
+//           label="Medical Notes"
+//           icon="document-text-outline"
+//           value={profile.medicalNotes}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("medicalNotes", v)}
+//           placeholder="Any existing conditions, medications…"
+//           multiline
+//         />
+//         <ProfileField
+//           label="Emergency Contact"
+//           icon="call-outline"
+//           value={profile.emergencyContact}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("emergencyContact", v)}
+//           keyboardType="phone-pad"
+//         />
+//       </View>
+
+//       {/* ── LOGOUT ── */}
+//       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+//         <Ionicons name="log-out-outline" size={20} color={COLORS.danger || "#EF4444"} />
 //         <Text style={styles.logoutText}>Logout</Text>
 //       </TouchableOpacity>
 //     </ScrollView>
 //   );
 // }
 
-// function EditInput({ value, onChangeText, keyboardType, big }) {
+// // ── ProfileField Component ─────────────────────────────────────────────────────
+// function ProfileField({
+//   label, icon, value, edit, onChangeText,
+//   placeholder, keyboardType, multiline,
+// }) {
 //   return (
-//     <TextInput
-//       value={value}
-//       onChangeText={onChangeText}
-//       keyboardType={keyboardType}
-//       style={[styles.editInput, big && styles.editInputBig]}
-//     />
-//   );
-// }
-
-// function Info({ label, value, icon, editMode, onChangeText }) {
-//   return (
-//     <View style={styles.infoRow}>
-//       <View style={styles.infoLeft}>
-//         <View style={styles.iconBox}>
-//           <Ionicons name={icon} size={20} color={COLORS.primary} />
-//         </View>
-//         <Text style={styles.label}>{label}</Text>
+//     <View style={fieldStyles.row}>
+//       <View style={fieldStyles.iconWrap}>
+//         <Ionicons name={icon} size={18} color={COLORS.primary} />
 //       </View>
-
-//       {editMode ? (
-//         <TextInput value={value} onChangeText={onChangeText} style={styles.inlineInput} />
-//       ) : (
-//         <Text style={styles.value}>{value}</Text>
-//       )}
+//       <View style={{ flex: 1 }}>
+//         <Text style={fieldStyles.label}>{label}</Text>
+//         {edit ? (
+//           <TextInput
+//             style={[fieldStyles.input, multiline && { height: 60 }]}
+//             value={value}
+//             onChangeText={onChangeText}
+//             placeholder={placeholder || label}
+//             placeholderTextColor={COLORS.muted}
+//             keyboardType={keyboardType || "default"}
+//             multiline={multiline}
+//           />
+//         ) : (
+//           <Text style={fieldStyles.value}>{value || "—"}</Text>
+//         )}
+//       </View>
 //     </View>
 //   );
 // }
 
+// // ── Styles ─────────────────────────────────────────────────────────────────────
 // const styles = StyleSheet.create({
-//   container: { flex: 1, backgroundColor: COLORS.background, paddingHorizontal: 18 },
+//   container: { flex: 1, backgroundColor: COLORS.background },
 
-//   header: {
-//     marginTop: 52,
-//     backgroundColor: COLORS.card,
-//     borderRadius: 28,
-//     padding: 22,
+//   center: {
+//     flex: 1, justifyContent: "center", alignItems: "center",
+//     backgroundColor: COLORS.background,
+//   },
+
+//   // Avatar
+//   avatarSection: {
 //     alignItems: "center",
-//     borderWidth: 1,
-//     borderColor: COLORS.border,
-//     elevation: 4,
+//     paddingTop: 60,
+//     paddingBottom: 20,
 //   },
-
 //   avatar: {
-//     width: 96,
-//     height: 96,
-//     borderRadius: 32,
-//     backgroundColor: COLORS.lightBlue,
+//     width: 100, height: 100, borderRadius: 50,
+//     borderWidth: 3, borderColor: COLORS.primary,
 //   },
+//   avatarPlaceholder: {
+//     width: 100, height: 100, borderRadius: 50,
+//     backgroundColor: COLORS.lightBlue || "#EFF6FF",
+//     alignItems: "center", justifyContent: "center",
+//     borderWidth: 2, borderColor: COLORS.primary,
+//   },
+//   cameraOverlay: {
+//     position: "absolute", bottom: 0, right: 0,
+//     width: 32, height: 32, borderRadius: 16,
+//     backgroundColor: COLORS.primary,
+//     alignItems: "center", justifyContent: "center",
+//     borderWidth: 2, borderColor: "#fff",
+//   },
+//   name: { fontSize: 22, fontWeight: "900", color: COLORS.text, marginTop: 12 },
+//   subName: { color: COLORS.muted, marginTop: 4, fontSize: 14 },
 
-//   cameraBadge: {
-//     position: "absolute",
-//     right: -4,
-//     bottom: -4,
-//     width: 34,
-//     height: 34,
-//     borderRadius: 17,
+//   // Edit row
+//   editRow: { paddingHorizontal: 20, marginBottom: 8 },
+//   editBtn: {
+//     flexDirection: "row", alignItems: "center", gap: 6,
+//     alignSelf: "flex-end",
+//     backgroundColor: COLORS.lightBlue || "#EFF6FF",
+//     paddingHorizontal: 16, paddingVertical: 8,
+//     borderRadius: 20, borderWidth: 1, borderColor: COLORS.primary,
+//   },
+//   editBtnText: { color: COLORS.primary, fontWeight: "800", fontSize: 14 },
+//   editActionRow: { flexDirection: "row", justifyContent: "flex-end", gap: 10 },
+//   cancelBtn: {
+//     paddingHorizontal: 20, paddingVertical: 10,
+//     borderRadius: 14, backgroundColor: COLORS.background,
+//     borderWidth: 1, borderColor: COLORS.border,
+//   },
+//   cancelBtnText: { color: COLORS.muted, fontWeight: "800" },
+//   saveBtn: {
+//     paddingHorizontal: 24, paddingVertical: 10,
+//     borderRadius: 14, backgroundColor: COLORS.primary,
+//     minWidth: 80, alignItems: "center",
+//   },
+//   saveBtnText: { color: "#fff", fontWeight: "900" },
+
+//   // ── Reports Card ──────────────────────────────────────────────────────────
+//   reportsCard: {
+//     marginHorizontal: 18,
+//     marginBottom: 16,
+//     backgroundColor: COLORS.card,
+//     borderRadius: 24,
+//     padding: 16,
+//     borderWidth: 1.5,
+//     borderColor: COLORS.primary,
+//     flexDirection: "row",
+//     alignItems: "center",
+//     gap: 14,
+//     elevation: 3,
+//     shadowColor: COLORS.primary,
+//     shadowOpacity: 0.12,
+//     shadowRadius: 12,
+//   },
+//   reportsIconBox: {
+//     width: 54,
+//     height: 54,
+//     borderRadius: 18,
 //     backgroundColor: COLORS.primary,
 //     alignItems: "center",
 //     justifyContent: "center",
-//     borderWidth: 2,
-//     borderColor: "#fff",
 //   },
-
-//   name: { marginTop: 14, fontSize: 22, fontWeight: "900", color: COLORS.text },
-//   phone: { color: COLORS.muted, marginTop: 5, fontWeight: "600" },
-
-//   editBtn: {
-//     marginTop: 16,
-//     backgroundColor: COLORS.lightBlue,
-//     paddingHorizontal: 16,
-//     paddingVertical: 10,
-//     borderRadius: 16,
-//     flexDirection: "row",
-//     alignItems: "center",
-//     gap: 8,
-//   },
-
-//   editText: { color: COLORS.primary, fontWeight: "900" },
-
-//   editInput: {
-//     marginTop: 8,
-//     width: "100%",
-//     height: 46,
-//     borderRadius: 14,
-//     borderWidth: 1,
-//     borderColor: COLORS.border,
-//     backgroundColor: COLORS.background,
-//     paddingHorizontal: 12,
+//   reportsTitle: {
 //     color: COLORS.text,
-//     fontWeight: "800",
-//     textAlign: "center",
-//   },
-
-//   editInputBig: {
-//     marginTop: 14,
-//     fontSize: 20,
+//     fontSize: 16,
 //     fontWeight: "900",
 //   },
+//   reportsSub: {
+//     color: COLORS.muted,
+//     fontSize: 12,
+//     fontWeight: "600",
+//     marginTop: 4,
+//     lineHeight: 17,
+//   },
+//   reportsChevron: {
+//     width: 32,
+//     height: 32,
+//     borderRadius: 12,
+//     backgroundColor: COLORS.lightBlue || "#EFF6FF",
+//     alignItems: "center",
+//     justifyContent: "center",
+//   },
 
+//   // Cards
 //   card: {
-//     marginTop: 18,
+//     marginHorizontal: 18, marginBottom: 16,
 //     backgroundColor: COLORS.card,
-//     borderRadius: 24,
-//     padding: 18,
-//     borderWidth: 1,
-//     borderColor: COLORS.border,
+//     borderRadius: 24, padding: 18,
+//     borderWidth: 1, borderColor: COLORS.border,
 //     elevation: 2,
 //   },
-
 //   sectionTitle: {
-//     fontSize: 18,
-//     fontWeight: "900",
-//     color: COLORS.text,
-//     marginBottom: 12,
+//     fontSize: 16, fontWeight: "900", color: COLORS.text, marginBottom: 14,
 //   },
 
-//   infoRow: {
-//     paddingVertical: 13,
-//     borderBottomWidth: 1,
-//     borderBottomColor: COLORS.border,
-//     flexDirection: "row",
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     gap: 10,
-//   },
-
-//   infoLeft: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     gap: 10,
-//     flex: 1,
-//   },
-
-//   iconBox: {
-//     width: 38,
-//     height: 38,
-//     borderRadius: 14,
-//     backgroundColor: COLORS.lightBlue,
-//     alignItems: "center",
-//     justifyContent: "center",
-//   },
-
-//   label: { color: COLORS.muted, fontWeight: "800" },
-
-//   value: {
-//     color: COLORS.text,
-//     fontWeight: "900",
-//     maxWidth: "48%",
-//     textAlign: "right",
-//   },
-
-//   inlineInput: {
-//     width: "48%",
-//     height: 42,
-//     borderRadius: 12,
-//     borderWidth: 1,
-//     borderColor: COLORS.border,
-//     paddingHorizontal: 10,
-//     color: COLORS.text,
-//     fontWeight: "800",
-//     textAlign: "right",
-//     backgroundColor: COLORS.background,
-//   },
-
-//   cancelBtn: {
-//     marginTop: 18,
-//     height: 50,
-//     borderRadius: 18,
-//     backgroundColor: COLORS.card,
-//     borderWidth: 1,
-//     borderColor: COLORS.border,
-//     alignItems: "center",
-//     justifyContent: "center",
-//   },
-
-//   cancelText: { color: COLORS.muted, fontWeight: "900" },
-
+//   // Logout
 //   logoutBtn: {
-//     marginTop: 18,
-//     marginBottom: 34,
+//     marginHorizontal: 18,
+//     marginBottom: 12,
 //     height: 52,
 //     borderRadius: 18,
 //     backgroundColor: "#FEF2F2",
-//     alignItems: "center",
-//     justifyContent: "center",
-//     flexDirection: "row",
-//     gap: 8,
-//     borderWidth: 1,
-//     borderColor: "#FECACA",
+//     alignItems: "center", justifyContent: "center",
+//     flexDirection: "row", gap: 8,
+//     borderWidth: 1, borderColor: "#FECACA",
 //   },
+//   logoutText: { color: COLORS.danger || "#EF4444", fontWeight: "900", fontSize: 15 },
+// });
 
-//   logoutText: { color: COLORS.danger, fontWeight: "900" },
+// const fieldStyles = StyleSheet.create({
+//   row: {
+//     flexDirection: "row", alignItems: "flex-start", gap: 12,
+//     paddingVertical: 10,
+//     borderBottomWidth: 1, borderBottomColor: COLORS.border,
+//   },
+//   iconWrap: { marginTop: 2, width: 24, alignItems: "center" },
+//   label: { fontSize: 11, color: COLORS.muted, fontWeight: "700", marginBottom: 2 },
+//   value: { fontSize: 15, fontWeight: "700", color: COLORS.text },
+//   input: {
+//     fontSize: 15, fontWeight: "700", color: COLORS.text,
+//     borderBottomWidth: 1, borderBottomColor: COLORS.primary,
+//     paddingVertical: 2,
+//   },
 // });  
 
 
@@ -422,7 +984,557 @@
 
 
 
-import React, { useState } from "react";
+
+
+
+
+
+
+
+// // src/screens/patient/PatientProfileScreen.js
+// // Shows real logged-in patient data fetched from backend
+// // ── Reports button added → navigates to PatientReports ──
+
+// import React, { useState, useEffect, useCallback } from "react";
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   ScrollView,
+//   TouchableOpacity,
+//   Image,
+//   TextInput,
+//   Alert,
+//   ActivityIndicator,
+//   RefreshControl,
+// } from "react-native";
+// import * as ImagePicker from "expo-image-picker";
+// import { Ionicons } from "@expo/vector-icons";
+// import { COLORS } from "../../constants/colors";
+// import { CommonActions } from "@react-navigation/native";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { useQueue } from "../../context/QueueContext";
+// import { fetchMyProfile, updateMyProfile } from "../../services/apiService";
+
+// export default function PatientProfileScreen({ navigation }) {
+//   const [editMode, setEditMode]     = useState(false);
+//   const [loading, setLoading]       = useState(true);
+//   const [saving, setSaving]         = useState(false);
+//   const [refreshing, setRefreshing] = useState(false);
+
+//   const [profile, setProfile] = useState({
+//     fullName:         "",
+//     phone:            "",
+//     email:            "",
+//     age:              "",
+//     gender:           "",
+//     bloodGroup:       "",
+//     city:             "",
+//     allergies:        "",
+//     medicalNotes:     "",
+//     emergencyContact: "",
+//     photo:            null,
+//   });
+
+//   // ── Load profile from backend ───────────────────────────────────────────────
+//   const loadProfile = useCallback(async (isRefresh = false) => {
+//     try {
+//       if (!isRefresh) setLoading(true);
+//       const data = await fetchMyProfile();
+//       setProfile({
+//         fullName:         data.fullName         || "",
+//         phone:            data.phone            || "",
+//         email:            data.email            || "",
+//         age:              data.age              ? String(data.age) : "",
+//         gender:           data.gender           || "",
+//         bloodGroup:       data.bloodGroup       || "",
+//         city:             data.city             || "",
+//         allergies:        data.allergies        || "",
+//         medicalNotes:     data.medicalNotes     || "",
+//         emergencyContact: data.emergencyContact || "",
+//         photo:            data.photo            || null,
+//       });
+//     } catch (err) {
+//       console.log("ProfileScreen error:", err.message);
+//       Alert.alert("Error", "Could not load your profile. Please try again.");
+//     } finally {
+//       setLoading(false);
+//       setRefreshing(false);
+//     }
+//   }, []);
+
+//   useEffect(() => { loadProfile(); }, []);
+
+//   const onRefresh = () => { setRefreshing(true); loadProfile(true); };
+
+//   const updateField = (key, value) =>
+//     setProfile((prev) => ({ ...prev, [key]: value }));
+
+//   // ── Pick photo ──────────────────────────────────────────────────────────────
+//   const pickImage = async () => {
+//     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+//     if (!permission.granted) {
+//       Alert.alert("Permission Required", "Please allow gallery access.");
+//       return;
+//     }
+//     const result = await ImagePicker.launchImageLibraryAsync({
+//       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+//       quality: 0.8,
+//       allowsEditing: true,
+//       aspect: [1, 1],
+//     });
+//     if (!result.canceled) updateField("photo", result.assets[0].uri);
+//   };
+
+//   // ── Save profile ────────────────────────────────────────────────────────────
+//   const saveProfile = async () => {
+//     if (!profile.fullName.trim()) {
+//       Alert.alert("Error", "Full name is required.");
+//       return;
+//     }
+//     setSaving(true);
+//     try {
+//       await updateMyProfile({
+//         fullName:         profile.fullName,
+//         age:              profile.age ? parseInt(profile.age) : null,
+//         gender:           profile.gender,
+//         bloodGroup:       profile.bloodGroup,
+//         city:             profile.city,
+//         allergies:        profile.allergies,
+//         medicalNotes:     profile.medicalNotes,
+//         emergencyContact: profile.emergencyContact,
+//       });
+//       setEditMode(false);
+//       Alert.alert("Success", "Profile updated successfully!");
+//     } catch (err) {
+//       Alert.alert("Error", err.message || "Update failed.");
+//     } finally {
+//       setSaving(false);
+//     }
+//   };
+
+//   // ── Logout ──────────────────────────────────────────────────────────────────
+//   const logout = async () => {
+//     clearActiveToken();
+//     await AsyncStorage.clear();
+//     navigation.dispatch(
+//       CommonActions.reset({ index: 0, routes: [{ name: "RoleSelect" }] })
+//     );
+//   };
+
+//   // ── Loading state ───────────────────────────────────────────────────────────
+//   if (loading) {
+//     return (
+//       <View style={styles.center}>
+//         <ActivityIndicator size="large" color={COLORS.primary} />
+//       </View>
+//     );
+//   }
+
+//   return (
+//     <ScrollView
+//       style={styles.container}
+//       showsVerticalScrollIndicator={false}
+//       contentContainerStyle={{ paddingBottom: 40 }}
+//       refreshControl={
+//         <RefreshControl
+//           refreshing={refreshing}
+//           onRefresh={onRefresh}
+//           colors={[COLORS.primary]}
+//         />
+//       }
+//     >
+//       {/* ── AVATAR SECTION ── */}
+//       <View style={styles.avatarSection}>
+//         <TouchableOpacity
+//           onPress={editMode ? pickImage : null}
+//           activeOpacity={editMode ? 0.8 : 1}
+//         >
+//           {profile.photo ? (
+//             <Image source={{ uri: profile.photo }} style={styles.avatar} />
+//           ) : (
+//             <View style={styles.avatarPlaceholder}>
+//               <Ionicons name="person" size={48} color={COLORS.primary} />
+//             </View>
+//           )}
+//           {editMode && (
+//             <View style={styles.cameraOverlay}>
+//               <Ionicons name="camera" size={18} color="#fff" />
+//             </View>
+//           )}
+//         </TouchableOpacity>
+
+//         <Text style={styles.name}>{profile.fullName || "Patient"}</Text>
+//         <Text style={styles.subName}>{profile.phone || profile.email || ""}</Text>
+//       </View>
+
+//       {/* ── EDIT TOGGLE ── */}
+//       <View style={styles.editRow}>
+//         {!editMode ? (
+//           <TouchableOpacity
+//             style={styles.editBtn}
+//             onPress={() => setEditMode(true)}
+//           >
+//             <Ionicons name="pencil-outline" size={16} color={COLORS.primary} />
+//             <Text style={styles.editBtnText}>Edit Profile</Text>
+//           </TouchableOpacity>
+//         ) : (
+//           <View style={styles.editActionRow}>
+//             <TouchableOpacity
+//               style={styles.cancelBtn}
+//               onPress={() => { setEditMode(false); loadProfile(); }}
+//             >
+//               <Text style={styles.cancelBtnText}>Cancel</Text>
+//             </TouchableOpacity>
+//             <TouchableOpacity
+//               style={styles.saveBtn}
+//               onPress={saveProfile}
+//               disabled={saving}
+//             >
+//               {saving ? (
+//                 <ActivityIndicator size="small" color="#fff" />
+//               ) : (
+//                 <Text style={styles.saveBtnText}>Save</Text>
+//               )}
+//             </TouchableOpacity>
+//           </View>
+//         )}
+//       </View>
+
+//       {/* ── MY REPORTS BUTTON ── */}
+//       <TouchableOpacity
+//         activeOpacity={0.86}
+//         style={styles.reportsCard}
+//         onPress={() => navigation.navigate("PatientReports")}
+//       >
+//         <View style={styles.reportsIconBox}>
+//           <Ionicons name="folder-open-outline" size={26} color="#fff" />
+//         </View>
+
+//         <View style={{ flex: 1 }}>
+//           <Text style={styles.reportsTitle}>My Medical Reports</Text>
+//           <Text style={styles.reportsSub}>
+//             View, add and manage your lab reports, scans & prescriptions
+//           </Text>
+//         </View>
+
+//         <View style={styles.reportsChevron}>
+//           <Ionicons name="chevron-forward" size={18} color={COLORS.primary} />
+//         </View>
+//       </TouchableOpacity>
+
+//       {/* ── PERSONAL INFO ── */}
+//       <View style={styles.card}>
+//         <Text style={styles.sectionTitle}>Personal Information</Text>
+
+//         <ProfileField
+//           label="Full Name"
+//           icon="person-outline"
+//           value={profile.fullName}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("fullName", v)}
+//         />
+//         <ProfileField
+//           label="Phone"
+//           icon="call-outline"
+//           value={profile.phone}
+//           edit={false}
+//         />
+//         <ProfileField
+//           label="Email"
+//           icon="mail-outline"
+//           value={profile.email}
+//           edit={false}
+//         />
+//         <ProfileField
+//           label="Age"
+//           icon="calendar-outline"
+//           value={profile.age}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("age", v)}
+//           keyboardType="number-pad"
+//         />
+//         <ProfileField
+//           label="Gender"
+//           icon="male-female-outline"
+//           value={profile.gender}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("gender", v)}
+//           placeholder="Male / Female / Other"
+//         />
+//         <ProfileField
+//           label="Blood Group"
+//           icon="water-outline"
+//           value={profile.bloodGroup}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("bloodGroup", v)}
+//           placeholder="e.g. O+"
+//         />
+//         <ProfileField
+//           label="City"
+//           icon="location-outline"
+//           value={profile.city}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("city", v)}
+//         />
+//       </View>
+
+//       {/* ── MEDICAL INFO ── */}
+//       <View style={styles.card}>
+//         <Text style={styles.sectionTitle}>Medical Information</Text>
+
+//         <ProfileField
+//           label="Allergies"
+//           icon="warning-outline"
+//           value={profile.allergies}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("allergies", v)}
+//           placeholder="e.g. Penicillin, Dust"
+//           multiline
+//         />
+//         <ProfileField
+//           label="Medical Notes"
+//           icon="document-text-outline"
+//           value={profile.medicalNotes}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("medicalNotes", v)}
+//           placeholder="Any existing conditions, medications…"
+//           multiline
+//         />
+//         <ProfileField
+//           label="Emergency Contact"
+//           icon="call-outline"
+//           value={profile.emergencyContact}
+//           edit={editMode}
+//           onChangeText={(v) => updateField("emergencyContact", v)}
+//           keyboardType="phone-pad"
+//         />
+//       </View>
+
+//       {/* ── LOGOUT ── */}
+//       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+//         <Ionicons name="log-out-outline" size={20} color={COLORS.danger || "#EF4444"} />
+//         <Text style={styles.logoutText}>Logout</Text>
+//       </TouchableOpacity>
+//     </ScrollView>
+//   );
+// }
+
+// // ── ProfileField Component ─────────────────────────────────────────────────────
+// function ProfileField({
+//   label, icon, value, edit, onChangeText,
+//   placeholder, keyboardType, multiline,
+// }) {
+//   return (
+//     <View style={fieldStyles.row}>
+//       <View style={fieldStyles.iconWrap}>
+//         <Ionicons name={icon} size={18} color={COLORS.primary} />
+//       </View>
+//       <View style={{ flex: 1 }}>
+//         <Text style={fieldStyles.label}>{label}</Text>
+//         {edit ? (
+//           <TextInput
+//             style={[fieldStyles.input, multiline && { height: 60 }]}
+//             value={value}
+//             onChangeText={onChangeText}
+//             placeholder={placeholder || label}
+//             placeholderTextColor={COLORS.muted}
+//             keyboardType={keyboardType || "default"}
+//             multiline={multiline}
+//           />
+//         ) : (
+//           <Text style={fieldStyles.value}>{value || "—"}</Text>
+//         )}
+//       </View>
+//     </View>
+//   );
+// }
+
+// // ── Styles ─────────────────────────────────────────────────────────────────────
+// const styles = StyleSheet.create({
+//   container: { flex: 1, backgroundColor: COLORS.background },
+
+//   center: {
+//     flex: 1, justifyContent: "center", alignItems: "center",
+//     backgroundColor: COLORS.background,
+//   },
+
+//   // Avatar
+//   avatarSection: {
+//     alignItems: "center",
+//     paddingTop: 60,
+//     paddingBottom: 20,
+//   },
+//   avatar: {
+//     width: 100, height: 100, borderRadius: 50,
+//     borderWidth: 3, borderColor: COLORS.primary,
+//   },
+//   avatarPlaceholder: {
+//     width: 100, height: 100, borderRadius: 50,
+//     backgroundColor: COLORS.lightBlue || "#EFF6FF",
+//     alignItems: "center", justifyContent: "center",
+//     borderWidth: 2, borderColor: COLORS.primary,
+//   },
+//   cameraOverlay: {
+//     position: "absolute", bottom: 0, right: 0,
+//     width: 32, height: 32, borderRadius: 16,
+//     backgroundColor: COLORS.primary,
+//     alignItems: "center", justifyContent: "center",
+//     borderWidth: 2, borderColor: "#fff",
+//   },
+//   name: { fontSize: 22, fontWeight: "900", color: COLORS.text, marginTop: 12 },
+//   subName: { color: COLORS.muted, marginTop: 4, fontSize: 14 },
+
+//   // Edit row
+//   editRow: { paddingHorizontal: 20, marginBottom: 8 },
+//   editBtn: {
+//     flexDirection: "row", alignItems: "center", gap: 6,
+//     alignSelf: "flex-end",
+//     backgroundColor: COLORS.lightBlue || "#EFF6FF",
+//     paddingHorizontal: 16, paddingVertical: 8,
+//     borderRadius: 20, borderWidth: 1, borderColor: COLORS.primary,
+//   },
+//   editBtnText: { color: COLORS.primary, fontWeight: "800", fontSize: 14 },
+//   editActionRow: { flexDirection: "row", justifyContent: "flex-end", gap: 10 },
+//   cancelBtn: {
+//     paddingHorizontal: 20, paddingVertical: 10,
+//     borderRadius: 14, backgroundColor: COLORS.background,
+//     borderWidth: 1, borderColor: COLORS.border,
+//   },
+//   cancelBtnText: { color: COLORS.muted, fontWeight: "800" },
+//   saveBtn: {
+//     paddingHorizontal: 24, paddingVertical: 10,
+//     borderRadius: 14, backgroundColor: COLORS.primary,
+//     minWidth: 80, alignItems: "center",
+//   },
+//   saveBtnText: { color: "#fff", fontWeight: "900" },
+
+//   // ── Reports Card ──────────────────────────────────────────────────────────
+//   reportsCard: {
+//     marginHorizontal: 18,
+//     marginBottom: 16,
+//     backgroundColor: COLORS.card,
+//     borderRadius: 24,
+//     padding: 16,
+//     borderWidth: 1.5,
+//     borderColor: COLORS.primary,
+//     flexDirection: "row",
+//     alignItems: "center",
+//     gap: 14,
+//     elevation: 3,
+//     shadowColor: COLORS.primary,
+//     shadowOpacity: 0.12,
+//     shadowRadius: 12,
+//   },
+//   reportsIconBox: {
+//     width: 54,
+//     height: 54,
+//     borderRadius: 18,
+//     backgroundColor: COLORS.primary,
+//     alignItems: "center",
+//     justifyContent: "center",
+//   },
+//   reportsTitle: {
+//     color: COLORS.text,
+//     fontSize: 16,
+//     fontWeight: "900",
+//   },
+//   reportsSub: {
+//     color: COLORS.muted,
+//     fontSize: 12,
+//     fontWeight: "600",
+//     marginTop: 4,
+//     lineHeight: 17,
+//   },
+//   reportsChevron: {
+//     width: 32,
+//     height: 32,
+//     borderRadius: 12,
+//     backgroundColor: COLORS.lightBlue || "#EFF6FF",
+//     alignItems: "center",
+//     justifyContent: "center",
+//   },
+
+//   // Cards
+//   card: {
+//     marginHorizontal: 18, marginBottom: 16,
+//     backgroundColor: COLORS.card,
+//     borderRadius: 24, padding: 18,
+//     borderWidth: 1, borderColor: COLORS.border,
+//     elevation: 2,
+//   },
+//   sectionTitle: {
+//     fontSize: 16, fontWeight: "900", color: COLORS.text, marginBottom: 14,
+//   },
+
+//   // Logout
+//   logoutBtn: {
+//     marginHorizontal: 18,
+//     marginBottom: 12,
+//     height: 52,
+//     borderRadius: 18,
+//     backgroundColor: "#FEF2F2",
+//     alignItems: "center", justifyContent: "center",
+//     flexDirection: "row", gap: 8,
+//     borderWidth: 1, borderColor: "#FECACA",
+//   },
+//   logoutText: { color: COLORS.danger || "#EF4444", fontWeight: "900", fontSize: 15 },
+// });
+
+// const fieldStyles = StyleSheet.create({
+//   row: {
+//     flexDirection: "row", alignItems: "flex-start", gap: 12,
+//     paddingVertical: 10,
+//     borderBottomWidth: 1, borderBottomColor: COLORS.border,
+//   },
+//   iconWrap: { marginTop: 2, width: 24, alignItems: "center" },
+//   label: { fontSize: 11, color: COLORS.muted, fontWeight: "700", marginBottom: 2 },
+//   value: { fontSize: 15, fontWeight: "700", color: COLORS.text },
+//   input: {
+//     fontSize: 15, fontWeight: "700", color: COLORS.text,
+//     borderBottomWidth: 1, borderBottomColor: COLORS.primary,
+//     paddingVertical: 2,
+//   },
+// });  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// src/screens/patient/PatientProfileScreen.js
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -432,477 +1544,313 @@ import {
   Image,
   TextInput,
   Alert,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";
 import { CommonActions } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useQueue } from "../../context/QueueContext";
+import { fetchMyProfile, updateMyProfile } from "../../services/apiService";
 
 export default function PatientProfileScreen({ navigation }) {
-  const [editMode, setEditMode] = useState(false);
+  const { clearActiveToken } = useQueue();   // ← properly destructured here
+
+  const [editMode, setEditMode]     = useState(false);
+  const [loading, setLoading]       = useState(true);
+  const [saving, setSaving]         = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [profile, setProfile] = useState({
-    name: "Priya Sharma",
-    phone: "+91 98765 43210",
-    age: "28 years",
-    gender: "Female",
-    bloodGroup: "O+",
-    city: "Hyderabad",
-    allergies: "No known allergies",
-    medicalNotes: "Regular OPD visitor",
-    emergencyContact: "+91 91234 56789",
-    photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
+    fullName:         "",
+    phone:            "",
+    email:            "",
+    age:              "",
+    gender:           "",
+    bloodGroup:       "",
+    city:             "",
+    allergies:        "",
+    medicalNotes:     "",
+    emergencyContact: "",
+    photo:            null,
   });
 
-  const updateField = (key, value) => {
-    setProfile((prev) => ({ ...prev, [key]: value }));
-  };
+  // ── Load profile from backend ───────────────────────────────────────────────
+  const loadProfile = useCallback(async (isRefresh = false) => {
+    try {
+      if (!isRefresh) setLoading(true);
+      const data = await fetchMyProfile();
+      setProfile({
+        fullName:         data.fullName         || "",
+        phone:            data.phone            || "",
+        email:            data.email            || "",
+        age:              data.age              ? String(data.age) : "",
+        gender:           data.gender           || "",
+        bloodGroup:       data.bloodGroup       || "",
+        city:             data.city             || "",
+        allergies:        data.allergies        || "",
+        medicalNotes:     data.medicalNotes     || "",
+        emergencyContact: data.emergencyContact || "",
+        photo:            data.photo            || null,
+      });
+    } catch (err) {
+      console.log("ProfileScreen error:", err.message);
+      Alert.alert("Error", "Could not load your profile. Please try again.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
+  useEffect(() => { loadProfile(); }, []);
+
+  const onRefresh = () => { setRefreshing(true); loadProfile(true); };
+
+  const updateField = (key, value) =>
+    setProfile((prev) => ({ ...prev, [key]: value }));
+
+  // ── Pick photo ──────────────────────────────────────────────────────────────
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
     if (!permission.granted) {
       Alert.alert("Permission Required", "Please allow gallery access.");
       return;
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
       allowsEditing: true,
       aspect: [1, 1],
     });
-
-    if (!result.canceled) {
-      updateField("photo", result.assets[0].uri);
-    }
+    if (!result.canceled) updateField("photo", result.assets[0].uri);
   };
 
-  const saveProfile = () => {
-    if (!profile.name.trim() || !profile.phone.trim()) {
-      Alert.alert("Error", "Name and phone number are required.");
+  // ── Save profile ────────────────────────────────────────────────────────────
+  const saveProfile = async () => {
+    if (!profile.fullName.trim()) {
+      Alert.alert("Error", "Full name is required.");
       return;
     }
-
-    setEditMode(false);
-    Alert.alert("Saved", "Profile updated successfully.");
+    setSaving(true);
+    try {
+      await updateMyProfile({
+        fullName:         profile.fullName,
+        age:              profile.age ? parseInt(profile.age) : null,
+        gender:           profile.gender,
+        bloodGroup:       profile.bloodGroup,
+        city:             profile.city,
+        allergies:        profile.allergies,
+        medicalNotes:     profile.medicalNotes,
+        emergencyContact: profile.emergencyContact,
+      });
+      setEditMode(false);
+      Alert.alert("Success", "Profile updated successfully!");
+    } catch (err) {
+      Alert.alert("Error", err.message || "Update failed.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const logout = () => {
+  // ── Logout ──────────────────────────────────────────────────────────────────
+  const logout = async () => {
+    clearActiveToken();          // stop poll + wipe state
+    await AsyncStorage.clear();
     navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: "RoleSelect" }],
-      })
+      CommonActions.reset({ index: 0, routes: [{ name: "RoleSelect" }] })
     );
   };
 
-  return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <TouchableOpacity disabled={!editMode} onPress={pickImage}>
-          <Image source={{ uri: profile.photo }} style={styles.avatar} />
+  // ── Loading state ───────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
 
+  return (
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[COLORS.primary]}
+        />
+      }
+    >
+      {/* ── AVATAR SECTION ── */}
+      <View style={styles.avatarSection}>
+        <TouchableOpacity
+          onPress={editMode ? pickImage : null}
+          activeOpacity={editMode ? 0.8 : 1}
+        >
+          {profile.photo ? (
+            <Image source={{ uri: profile.photo }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Ionicons name="person" size={48} color={COLORS.primary} />
+            </View>
+          )}
           {editMode && (
-            <View style={styles.cameraBadge}>
+            <View style={styles.cameraOverlay}>
               <Ionicons name="camera" size={18} color="#fff" />
             </View>
           )}
         </TouchableOpacity>
 
-        {editMode ? (
-          <>
-            <EditInput
-              value={profile.name}
-              onChangeText={(v) => updateField("name", v)}
-              big
-            />
-            <EditInput
-              value={profile.phone}
-              onChangeText={(v) => updateField("phone", v)}
-              keyboardType="phone-pad"
-            />
-          </>
-        ) : (
-          <>
-            <Text style={styles.name}>{profile.name}</Text>
-            <Text style={styles.phone}>{profile.phone}</Text>
-          </>
-        )}
-
-        <TouchableOpacity
-          style={styles.editBtn}
-          onPress={editMode ? saveProfile : () => setEditMode(true)}
-        >
-          <Ionicons
-            name={editMode ? "save-outline" : "create-outline"}
-            size={18}
-            color={COLORS.primary}
-          />
-          <Text style={styles.editText}>
-            {editMode ? "Save Profile" : "Edit Profile"}
-          </Text>
-        </TouchableOpacity>
+        <Text style={styles.name}>{profile.fullName || "Patient"}</Text>
+        <Text style={styles.subName}>{profile.phone || profile.email || ""}</Text>
       </View>
 
+      {/* ── EDIT TOGGLE ── */}
+      <View style={styles.editRow}>
+        {!editMode ? (
+          <TouchableOpacity
+            style={styles.editBtn}
+            onPress={() => setEditMode(true)}
+          >
+            <Ionicons name="pencil-outline" size={16} color={COLORS.primary} />
+            <Text style={styles.editBtnText}>Edit Profile</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.editActionRow}>
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={() => { setEditMode(false); loadProfile(); }}
+            >
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.saveBtn}
+              onPress={saveProfile}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.saveBtnText}>Save</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
+      {/* ── MY REPORTS BUTTON ── */}
       <TouchableOpacity
         activeOpacity={0.86}
-        style={styles.reportCard}
+        style={styles.reportsCard}
         onPress={() => navigation.navigate("PatientReports")}
       >
-        <View style={styles.reportIcon}>
+        <View style={styles.reportsIconBox}>
           <Ionicons name="folder-open-outline" size={26} color="#fff" />
         </View>
-
         <View style={{ flex: 1 }}>
-          <Text style={styles.reportTitle}>My Medical Reports</Text>
-          <Text style={styles.reportSub}>
-            Save and view lab reports, scans and prescriptions
+          <Text style={styles.reportsTitle}>My Medical Reports</Text>
+          <Text style={styles.reportsSub}>
+            View, add and manage your lab reports, scans & prescriptions
           </Text>
         </View>
-
-        <Ionicons name="chevron-forward" size={22} color={COLORS.muted} />
+        <View style={styles.reportsChevron}>
+          <Ionicons name="chevron-forward" size={18} color={COLORS.primary} />
+        </View>
       </TouchableOpacity>
 
+      {/* ── PERSONAL INFO ── */}
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Personal Details</Text>
-
-        <Info
-          label="Age"
-          value={profile.age}
-          icon="calendar-outline"
-          editMode={editMode}
-          onChangeText={(v) => updateField("age", v)}
-        />
-
-        <Info
-          label="Gender"
-          value={profile.gender}
-          icon="female-outline"
-          editMode={editMode}
-          onChangeText={(v) => updateField("gender", v)}
-        />
-
-        <Info
-          label="Blood Group"
-          value={profile.bloodGroup}
-          icon="water-outline"
-          editMode={editMode}
-          onChangeText={(v) => updateField("bloodGroup", v)}
-        />
-
-        <Info
-          label="City"
-          value={profile.city}
-          icon="location-outline"
-          editMode={editMode}
-          onChangeText={(v) => updateField("city", v)}
-        />
+        <Text style={styles.sectionTitle}>Personal Information</Text>
+        <ProfileField label="Full Name" icon="person-outline" value={profile.fullName} edit={editMode} onChangeText={(v) => updateField("fullName", v)} />
+        <ProfileField label="Phone" icon="call-outline" value={profile.phone} edit={false} />
+        <ProfileField label="Email" icon="mail-outline" value={profile.email} edit={false} />
+        <ProfileField label="Age" icon="calendar-outline" value={profile.age} edit={editMode} onChangeText={(v) => updateField("age", v)} keyboardType="number-pad" />
+        <ProfileField label="Gender" icon="male-female-outline" value={profile.gender} edit={editMode} onChangeText={(v) => updateField("gender", v)} placeholder="Male / Female / Other" />
+        <ProfileField label="Blood Group" icon="water-outline" value={profile.bloodGroup} edit={editMode} onChangeText={(v) => updateField("bloodGroup", v)} placeholder="e.g. O+" />
+        <ProfileField label="City" icon="location-outline" value={profile.city} edit={editMode} onChangeText={(v) => updateField("city", v)} />
       </View>
 
+      {/* ── MEDICAL INFO ── */}
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Health Notes</Text>
-
-        <Info
-          label="Allergies"
-          value={profile.allergies}
-          icon="medkit-outline"
-          editMode={editMode}
-          onChangeText={(v) => updateField("allergies", v)}
-        />
-
-        <Info
-          label="Medical Notes"
-          value={profile.medicalNotes}
-          icon="document-text-outline"
-          editMode={editMode}
-          onChangeText={(v) => updateField("medicalNotes", v)}
-        />
-
-        <Info
-          label="Emergency Contact"
-          value={profile.emergencyContact}
-          icon="call-outline"
-          editMode={editMode}
-          onChangeText={(v) => updateField("emergencyContact", v)}
-        />
+        <Text style={styles.sectionTitle}>Medical Information</Text>
+        <ProfileField label="Allergies" icon="warning-outline" value={profile.allergies} edit={editMode} onChangeText={(v) => updateField("allergies", v)} placeholder="e.g. Penicillin, Dust" multiline />
+        <ProfileField label="Medical Notes" icon="document-text-outline" value={profile.medicalNotes} edit={editMode} onChangeText={(v) => updateField("medicalNotes", v)} placeholder="Any existing conditions, medications…" multiline />
+        <ProfileField label="Emergency Contact" icon="call-outline" value={profile.emergencyContact} edit={editMode} onChangeText={(v) => updateField("emergencyContact", v)} keyboardType="phone-pad" />
       </View>
 
-      {editMode && (
-        <TouchableOpacity
-          style={styles.cancelBtn}
-          onPress={() => setEditMode(false)}
-        >
-          <Text style={styles.cancelText}>Cancel Editing</Text>
-        </TouchableOpacity>
-      )}
-
+      {/* ── LOGOUT ── */}
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
-        <Ionicons name="log-out-outline" size={20} color={COLORS.danger} />
+        <Ionicons name="log-out-outline" size={20} color={COLORS.danger || "#EF4444"} />
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
-function EditInput({ value, onChangeText, keyboardType, big }) {
+// ── ProfileField Component ─────────────────────────────────────────────────────
+function ProfileField({ label, icon, value, edit, onChangeText, placeholder, keyboardType, multiline }) {
   return (
-    <TextInput
-      value={value}
-      onChangeText={onChangeText}
-      keyboardType={keyboardType}
-      style={[styles.editInput, big && styles.editInputBig]}
-    />
-  );
-}
-
-function Info({ label, value, icon, editMode, onChangeText }) {
-  return (
-    <View style={styles.infoRow}>
-      <View style={styles.infoLeft}>
-        <View style={styles.iconBox}>
-          <Ionicons name={icon} size={20} color={COLORS.primary} />
-        </View>
-        <Text style={styles.label}>{label}</Text>
+    <View style={fieldStyles.row}>
+      <View style={fieldStyles.iconWrap}>
+        <Ionicons name={icon} size={18} color={COLORS.primary} />
       </View>
-
-      {editMode ? (
-        <TextInput
-          value={value}
-          onChangeText={onChangeText}
-          style={styles.inlineInput}
-        />
-      ) : (
-        <Text style={styles.value}>{value}</Text>
-      )}
+      <View style={{ flex: 1 }}>
+        <Text style={fieldStyles.label}>{label}</Text>
+        {edit ? (
+          <TextInput
+            style={[fieldStyles.input, multiline && { height: 60 }]}
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder || label}
+            placeholderTextColor={COLORS.muted}
+            keyboardType={keyboardType || "default"}
+            multiline={multiline}
+          />
+        ) : (
+          <Text style={fieldStyles.value}>{value || "—"}</Text>
+        )}
+      </View>
     </View>
   );
 }
 
+// ── Styles ─────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    paddingHorizontal: 18,
-  },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: COLORS.background },
+  avatarSection: { alignItems: "center", paddingTop: 60, paddingBottom: 20 },
+  avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: COLORS.primary },
+  avatarPlaceholder: { width: 100, height: 100, borderRadius: 50, backgroundColor: COLORS.lightBlue || "#EFF6FF", alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: COLORS.primary },
+  cameraOverlay: { position: "absolute", bottom: 0, right: 0, width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.primary, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "#fff" },
+  name: { fontSize: 22, fontWeight: "900", color: COLORS.text, marginTop: 12 },
+  subName: { color: COLORS.muted, marginTop: 4, fontSize: 14 },
+  editRow: { paddingHorizontal: 20, marginBottom: 8 },
+  editBtn: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-end", backgroundColor: COLORS.lightBlue || "#EFF6FF", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: COLORS.primary },
+  editBtnText: { color: COLORS.primary, fontWeight: "800", fontSize: 14 },
+  editActionRow: { flexDirection: "row", justifyContent: "flex-end", gap: 10 },
+  cancelBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 14, backgroundColor: COLORS.background, borderWidth: 1, borderColor: COLORS.border },
+  cancelBtnText: { color: COLORS.muted, fontWeight: "800" },
+  saveBtn: { paddingHorizontal: 24, paddingVertical: 10, borderRadius: 14, backgroundColor: COLORS.primary, minWidth: 80, alignItems: "center" },
+  saveBtnText: { color: "#fff", fontWeight: "900" },
+  reportsCard: { marginHorizontal: 18, marginBottom: 16, backgroundColor: COLORS.card, borderRadius: 24, padding: 16, borderWidth: 1.5, borderColor: COLORS.primary, flexDirection: "row", alignItems: "center", gap: 14, elevation: 3, shadowColor: COLORS.primary, shadowOpacity: 0.12, shadowRadius: 12 },
+  reportsIconBox: { width: 54, height: 54, borderRadius: 18, backgroundColor: COLORS.primary, alignItems: "center", justifyContent: "center" },
+  reportsTitle: { color: COLORS.text, fontSize: 16, fontWeight: "900" },
+  reportsSub: { color: COLORS.muted, fontSize: 12, fontWeight: "600", marginTop: 4, lineHeight: 17 },
+  reportsChevron: { width: 32, height: 32, borderRadius: 12, backgroundColor: COLORS.lightBlue || "#EFF6FF", alignItems: "center", justifyContent: "center" },
+  card: { marginHorizontal: 18, marginBottom: 16, backgroundColor: COLORS.card, borderRadius: 24, padding: 18, borderWidth: 1, borderColor: COLORS.border, elevation: 2 },
+  sectionTitle: { fontSize: 16, fontWeight: "900", color: COLORS.text, marginBottom: 14 },
+  logoutBtn: { marginHorizontal: 18, marginBottom: 12, height: 52, borderRadius: 18, backgroundColor: "#FEF2F2", alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 8, borderWidth: 1, borderColor: "#FECACA" },
+  logoutText: { color: COLORS.danger || "#EF4444", fontWeight: "900", fontSize: 15 },
+});
 
-  header: {
-    marginTop: 52,
-    backgroundColor: COLORS.card,
-    borderRadius: 28,
-    padding: 22,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    elevation: 4,
-  },
-
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 32,
-    backgroundColor: COLORS.lightBlue,
-  },
-
-  cameraBadge: {
-    position: "absolute",
-    right: -4,
-    bottom: -4,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "#fff",
-  },
-
-  name: {
-    marginTop: 14,
-    fontSize: 22,
-    fontWeight: "900",
-    color: COLORS.text,
-  },
-
-  phone: {
-    color: COLORS.muted,
-    marginTop: 5,
-    fontWeight: "600",
-  },
-
-  editBtn: {
-    marginTop: 16,
-    backgroundColor: COLORS.lightBlue,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  editText: {
-    color: COLORS.primary,
-    fontWeight: "900",
-  },
-
-  editInput: {
-    marginTop: 8,
-    width: "100%",
-    height: 46,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.background,
-    paddingHorizontal: 12,
-    color: COLORS.text,
-    fontWeight: "800",
-    textAlign: "center",
-  },
-
-  editInputBig: {
-    marginTop: 14,
-    fontSize: 20,
-    fontWeight: "900",
-  },
-
-  reportCard: {
-    marginTop: 18,
-    backgroundColor: COLORS.card,
-    borderRadius: 24,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    elevation: 2,
-  },
-
-  reportIcon: {
-    width: 54,
-    height: 54,
-    borderRadius: 18,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  reportTitle: {
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: "900",
-  },
-
-  reportSub: {
-    color: COLORS.muted,
-    fontSize: 12,
-    fontWeight: "700",
-    marginTop: 4,
-    lineHeight: 17,
-  },
-
-  card: {
-    marginTop: 18,
-    backgroundColor: COLORS.card,
-    borderRadius: 24,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    elevation: 2,
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "900",
-    color: COLORS.text,
-    marginBottom: 12,
-  },
-
-  infoRow: {
-    paddingVertical: 13,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 10,
-  },
-
-  infoLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    flex: 1,
-  },
-
-  iconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 14,
-    backgroundColor: COLORS.lightBlue,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  label: {
-    color: COLORS.muted,
-    fontWeight: "800",
-  },
-
-  value: {
-    color: COLORS.text,
-    fontWeight: "900",
-    maxWidth: "48%",
-    textAlign: "right",
-  },
-
-  inlineInput: {
-    width: "48%",
-    height: 42,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingHorizontal: 10,
-    color: COLORS.text,
-    fontWeight: "800",
-    textAlign: "right",
-    backgroundColor: COLORS.background,
-  },
-
-  cancelBtn: {
-    marginTop: 18,
-    height: 50,
-    borderRadius: 18,
-    backgroundColor: COLORS.card,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  cancelText: {
-    color: COLORS.muted,
-    fontWeight: "900",
-  },
-
-  logoutBtn: {
-    marginTop: 18,
-    marginBottom: 34,
-    height: 52,
-    borderRadius: 18,
-    backgroundColor: "#FEF2F2",
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: 8,
-    borderWidth: 1,
-    borderColor: "#FECACA",
-  },
-
-  logoutText: {
-    color: COLORS.danger,
-    fontWeight: "900",
-  },
-});  
+const fieldStyles = StyleSheet.create({
+  row: { flexDirection: "row", alignItems: "flex-start", gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  iconWrap: { marginTop: 2, width: 24, alignItems: "center" },
+  label: { fontSize: 11, color: COLORS.muted, fontWeight: "700", marginBottom: 2 },
+  value: { fontSize: 15, fontWeight: "700", color: COLORS.text },
+  input: { fontSize: 15, fontWeight: "700", color: COLORS.text, borderBottomWidth: 1, borderBottomColor: COLORS.primary, paddingVertical: 2 },
+});

@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class PatientService {
 
     private final PatientRepository patientRepository;
-    private final UserService userService;
 
     public Patient getByUserId(Long userId) {
         return patientRepository.findByUserId(userId)

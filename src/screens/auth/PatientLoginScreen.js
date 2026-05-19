@@ -1089,8 +1089,7 @@ import { MotiView } from "moti";
 import { COLORS } from "../../constants/colors";
 import InputField from "../../components/InputField";
 import GradientButton from "../../components/GradientButton";
-import { loginUser, registerUser, resetUserPassword, checkPhoneRegistered } from "../../services/apiService";
-import { sendFirebaseOtp, verifyFirebaseOtp } from "../../services/firebaseOtpService"; // ← REST-based, works in Expo Go
+import { loginUser, registerUser, resetUserPassword, checkPhoneRegistered, sendBackendOtp } from "../../services/apiService";
 
 export default function PatientLoginScreen({ navigation }) {
   const { onUserLogin } = useQueue();
@@ -1260,32 +1259,32 @@ export default function PatientLoginScreen({ navigation }) {
 
 
   const sendOtp = async () => {
-  if (!forgotForm.phone.trim()) {
-    showPopup("Missing Phone", "Please enter your registered phone number.");
-    return;
-  }
-
-  setLoading(true);
-  try {
-    // ── Step 1: Check if phone is registered in MySQL ──────────────────
-    await checkPhoneRegistered(forgotForm.phone.trim());
-    // If it throws, phone is not registered — caught below
-
-    // ── Step 2: Phone is registered → send Firebase OTP ───────────────
-    const sessionInfo = await sendFirebaseOtp(forgotForm.phone.trim());
-    setOtpSessionInfo(sessionInfo);
-    showPopup("OTP Sent", "A 6-digit OTP has been sent to your phone number.", "info");
-    setForgotStep(2);
-  } catch (err) {
-    if (err.message?.includes("not registered")) {
-      showPopup("Not Registered", "This phone number is not registered. Please sign up first.");
-    } else {
-      showPopup("Error", err.message || "Failed to send OTP. Please try again.");
+    if (!forgotForm.phone.trim()) {
+      showPopup("Missing Phone", "Please enter your registered phone number.");
+      return;
     }
-  } finally {
-    setLoading(false);
-  }
-};
+
+    setLoading(true);
+    try {
+      const phoneNumber = forgotForm.phone.trim().startsWith("+")
+        ? forgotForm.phone.trim()
+        : "+91" + forgotForm.phone.trim();
+
+      // ── Step 1: Send OTP through our secure Spring Boot backend ───────
+      await sendBackendOtp(phoneNumber);
+      
+      showPopup("OTP Sent", "A 6-digit OTP has been sent to your phone number.", "info");
+      setForgotStep(2);
+    } catch (err) {
+      if (err.message?.includes("not registered")) {
+        showPopup("Not Registered", "This phone number is not registered. Please sign up first.");
+      } else {
+        showPopup("Error", err.message || "Failed to send OTP. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ── VERIFY OTP + RESET PASSWORD ──────────────────────────────────────────
   const resetPassword = async () => {
@@ -1297,15 +1296,12 @@ export default function PatientLoginScreen({ navigation }) {
 
     setLoading(true);
     try {
-      // Step 1: Verify OTP with Firebase
-      await verifyFirebaseOtp(otpSessionInfo, forgotForm.otp.trim());
-
-      // Step 2: OTP verified — update password in your backend
       const phoneNumber = forgotForm.phone.trim().startsWith("+")
         ? forgotForm.phone.trim()
         : "+91" + forgotForm.phone.trim();
 
-      await resetUserPassword(phoneNumber, forgotForm.newPassword);
+      // ── Step 2: Request backend to verify the OTP and reset password ────
+      await resetUserPassword(phoneNumber, forgotForm.otp.trim(), forgotForm.newPassword);
 
       showPopup(
         "Password Reset Successful",

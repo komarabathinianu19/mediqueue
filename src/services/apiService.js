@@ -2558,7 +2558,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export const BASE_URL = "http://192.168.0.5:8080/api";  // your PC's local IP
+export const BASE_URL = "http://192.168.1.14:8080/api";  // your PC's local IP
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -2601,14 +2601,25 @@ export const registerUser = async (userData) => {
   return data;
 };
 
-export const resetUserPassword = async (phone, newPassword) => {
+export const resetUserPassword = async (phone, code, newPassword) => {
   const res = await fetch(`${BASE_URL}/auth/reset-password`, {
     method: "POST",
     headers: getPublicHeaders(),
-    body: JSON.stringify({ phone, newPassword }),
+    body: JSON.stringify({ phone, code, newPassword }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Reset failed");
+  return data;
+};
+
+export const sendBackendOtp = async (phone) => {
+  const res = await fetch(`${BASE_URL}/auth/otp/send`, {
+    method: "POST",
+    headers: getPublicHeaders(),
+    body: JSON.stringify({ phone }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to send OTP");
   return data;
 };
 
@@ -2683,6 +2694,36 @@ export const registerHospital = async (payload) => {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Registration failed");
+  return data;
+};
+
+export const checkHospitalPhoneRegistered = async (phone) => {
+  const res = await fetch(`${BASE_URL}/hospitals/check-phone?phone=${encodeURIComponent(phone)}`, {
+    headers: getPublicHeaders(),
+  });
+  const data = await res.json();
+  return data;
+};
+
+export const sendHospitalBackendOtp = async (phone) => {
+  const res = await fetch(`${BASE_URL}/hospitals/otp/send`, {
+    method: "POST",
+    headers: getPublicHeaders(),
+    body: JSON.stringify({ phone }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to send OTP");
+  return data;
+};
+
+export const resetHospitalPassword = async (phone, code, newPassword) => {
+  const res = await fetch(`${BASE_URL}/hospitals/reset-password`, {
+    method: "POST",
+    headers: getPublicHeaders(),
+    body: JSON.stringify({ phone, code, newPassword }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Reset failed");
   return data;
 };
 

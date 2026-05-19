@@ -1038,6 +1038,31 @@ public class HospitalService {
                 .orElseThrow(() -> new RuntimeException("Hospital not found with email: " + email));
     }
 
+    public boolean isPhoneRegistered(String phone) {
+        // Try exact match first, then alternate formats
+        if (hospitalRepo.existsByPhone(phone)) return true;
+        // If phone starts with +91, also try without prefix
+        if (phone.startsWith("+91")) {
+            String raw = phone.substring(3);
+            if (hospitalRepo.existsByPhone(raw)) return true;
+        }
+        // If phone is raw digits, also try with +91 prefix
+        if (!phone.startsWith("+")) {
+            if (hospitalRepo.existsByPhone("+91" + phone)) return true;
+        }
+        return false;
+    }
+
+    public void resetPassword(String phone, String newPassword) {
+        // Try exact match first, then alternate formats
+        Hospital hospital = hospitalRepo.findByPhone(phone)
+                .or(() -> phone.startsWith("+91") ? hospitalRepo.findByPhone(phone.substring(3)) : java.util.Optional.empty())
+                .or(() -> !phone.startsWith("+") ? hospitalRepo.findByPhone("+91" + phone) : java.util.Optional.empty())
+                .orElseThrow(() -> new RuntimeException("Hospital with this phone number not found."));
+        hospital.setPassword(passwordEncoder.encode(newPassword));
+        hospitalRepo.save(hospital);
+    }
+
     private static final String CHARS  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 

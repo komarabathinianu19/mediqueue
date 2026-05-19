@@ -125,6 +125,7 @@ import PatientReportDetailsScreen from "../screens/patient/PatientReportDetailsS
 
 import HospitalVerificationScreen from "../screens/admin/HospitalVerificationScreen";
 import DoctorQueueDetailsScreen from "../screens/staff/DoctorQueueDetailsScreen";
+import PendingHospitalsScreen from "../screens/admin/PendingHospitalsScreen";
 import SplashScreenComponent from "../screens/SplashScreen";
 import { QueueProvider } from "../context/QueueContext";
 import { FeedbackProvider } from "../context/FeedbackContext";
@@ -162,6 +163,7 @@ export default function RootNavigator() {
 
       <Stack.Screen name="HospitalVerification" component={HospitalVerificationScreen} />
       <Stack.Screen name="DoctorQueueDetails" component={DoctorQueueDetailsScreen} />
+      <Stack.Screen name="PendingHospitals" component={PendingHospitalsScreen} />
     </Stack.Navigator>
       </FeedbackProvider>
     </QueueProvider>

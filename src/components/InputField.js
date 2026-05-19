@@ -16,7 +16,6 @@ export default function InputField({
       <Text style={styles.label}>{label}</Text>
       <TextInput
         value={value}
-        defaultValue={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={COLORS.muted}

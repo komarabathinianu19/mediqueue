@@ -518,8 +518,14 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
+import { MotiView } from "moti";
 import { COLORS } from "../../constants/colors";
-import { loginHospitalStaff } from "../../services/apiService";
+import {
+  loginHospitalStaff,
+  checkHospitalPhoneRegistered,
+  sendHospitalBackendOtp,
+  resetHospitalPassword,
+} from "../../services/apiService";
 import InputField from "../../components/InputField";
 import { useHospital } from "../../context/HospitalContext";
 
@@ -530,13 +536,40 @@ export default function StaffLoginScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ── Error popup state ────────────────────────────────────────────────────────
+  // ── Forgot Password States ──────────────────────────────────────────────────
+  const [screen, setScreen] = useState("login"); // login | forgot
+  const [forgotStep, setForgotStep] = useState(1);
+  const [forgotForm, setForgotForm] = useState({
+    phone: "",
+    otp: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  // ── Unified Popup States ─────────────────────────────────────────────────────
   const [popupVisible, setPopupVisible] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
+  const [popupTitle, setPopupTitle] = useState("");
+  const [popupType, setPopupType] = useState("error"); // "error" | "success" | "info"
+
+  const showPopup = (title, msg, type = "error") => {
+    setPopupTitle(title);
+    setPopupMessage(msg);
+    setPopupType(type);
+    setPopupVisible(true);
+  };
+
+  const closePopup = () => {
+    setPopupVisible(false);
+    if (popupType === "success") {
+      setScreen("login");
+      setForgotStep(1);
+      setForgotForm({ phone: "", otp: "", newPassword: "", confirmPassword: "" });
+    }
+  };
 
   const showError = (msg) => {
-    setPopupMessage(msg);
-    setPopupVisible(true);
+    showPopup("Login Failed", msg, "error");
   };
 
   const handleLogin = async () => {
@@ -570,9 +603,7 @@ export default function StaffLoginScreen({ navigation }) {
 
       navigation.reset({ index: 0, routes: [{ name: "StaffTabs" }] });
     } catch (err) {
-      // Show a friendly popup for any login failure
       const msg = err?.message || "";
-
       if (
         msg.toLowerCase().includes("invalid") ||
         msg.toLowerCase().includes("incorrect") ||
@@ -588,6 +619,63 @@ export default function StaffLoginScreen({ navigation }) {
       } else {
         showError(msg || "Login failed. Please try again.");
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendOtp = async () => {
+    if (!forgotForm.phone.trim()) {
+      showPopup("Missing Phone", "Please enter your registered hospital phone number.", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const phoneNumber = forgotForm.phone.trim().startsWith("+")
+        ? forgotForm.phone.trim()
+        : "+91" + forgotForm.phone.trim();
+
+      const phoneCheck = await checkHospitalPhoneRegistered(phoneNumber);
+      if (!phoneCheck.registered) {
+        showPopup("Not Registered", "This phone number is not registered for any hospital. Please register first.", "error");
+        setLoading(false);
+        return;
+      }
+
+      await sendHospitalBackendOtp(phoneNumber);
+
+      showPopup("OTP Sent", "A 6-digit OTP has been sent to your registered phone number.", "info");
+      setForgotStep(2);
+    } catch (err) {
+      showPopup("Error", err.message || "Failed to send OTP. Please try again.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!forgotForm.otp.trim())             return showPopup("Missing OTP", "Please enter the OTP.", "error");
+    if (!forgotForm.newPassword.trim())     return showPopup("Missing Password", "Please enter new password.", "error");
+    if (forgotForm.newPassword.length < 6)  return showPopup("Weak Password", "Password must be at least 6 characters.", "error");
+    if (forgotForm.newPassword !== forgotForm.confirmPassword)
+      return showPopup("Password Mismatch", "Passwords do not match.", "error");
+
+    setLoading(true);
+    try {
+      const phoneNumber = forgotForm.phone.trim().startsWith("+")
+        ? forgotForm.phone.trim()
+        : "+91" + forgotForm.phone.trim();
+
+      await resetHospitalPassword(phoneNumber, forgotForm.otp.trim(), forgotForm.newPassword);
+
+      showPopup(
+        "Password Reset Successful",
+        "Your password has been reset. Please login with your new password.",
+        "success"
+      );
+    } catch (err) {
+      showPopup("Error", err.message || "Failed to reset password. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -610,43 +698,149 @@ export default function StaffLoginScreen({ navigation }) {
         <Text style={styles.title}>Staff Login</Text>
         <Text style={styles.sub}>Sign in to manage your hospital</Text>
 
-        <InputField
-          label="Hospital ID"
-          placeholder="e.g. HSP-XXXXXX"
-          value={hospitalId}
-          onChangeText={(t) => setHospitalId(t.toUpperCase())}
-          autoCapitalize="characters"
-        />
+        {screen === "login" ? (
+          <MotiView
+            key="login"
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: "timing", duration: 500 }}
+          >
+            <InputField
+              label="Hospital ID"
+              placeholder="e.g. HSP-XXXXXX"
+              value={hospitalId}
+              onChangeText={(t) => setHospitalId(t.toUpperCase())}
+              autoCapitalize="characters"
+            />
 
-        <InputField
-          label="Email"
-          placeholder="hospital@email.com"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+            <InputField
+              label="Email"
+              placeholder="hospital@email.com"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
 
-        <InputField
-          label="Password"
-          placeholder="Enter password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+            <InputField
+              label="Password"
+              placeholder="Enter password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
 
-        <TouchableOpacity
-          style={[styles.btn, loading && styles.btnDisabled]}
-          onPress={handleLogin}
-          disabled={loading}
-          activeOpacity={0.85}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.btnText}>Sign In</Text>
-          )}
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.forgotLink}
+              onPress={() => { setScreen("forgot"); setForgotStep(1); }}
+            >
+              <Text style={styles.forgotText}>Forgot Password?</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.btn, loading && styles.btnDisabled]}
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.btnText}>Sign In</Text>
+              )}
+            </TouchableOpacity>
+          </MotiView>
+        ) : (
+          <MotiView
+            key="forgot"
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: "timing", duration: 500 }}
+          >
+            <View style={styles.cardHeaderRow}>
+              <Pressable
+                style={styles.smallBackBtn}
+                onPress={() => { setScreen("login"); setForgotStep(1); }}
+              >
+                <Ionicons name="chevron-back" size={22} color={COLORS.text} />
+              </Pressable>
+              <View style={{ flex: 1, marginLeft: 8 }}>
+                <Text style={styles.titleSmall}>Forgot Password?</Text>
+                <Text style={styles.subSmall}>
+                  {forgotStep === 1
+                    ? "Enter phone number to receive OTP"
+                    : "Enter OTP and create your new password"}
+                </Text>
+              </View>
+            </View>
+
+            {forgotStep === 1 ? (
+              <>
+                <InputField
+                  label="Registered Phone Number"
+                  placeholder="+91 00000 00000"
+                  value={forgotForm.phone}
+                  onChangeText={(v) => setForgotForm({ ...forgotForm, phone: v })}
+                  keyboardType="phone-pad"
+                />
+                <TouchableOpacity
+                  style={[styles.btn, loading && styles.btnDisabled]}
+                  onPress={handleSendOtp}
+                  disabled={loading}
+                  activeOpacity={0.85}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.btnText}>Send OTP</Text>
+                  )}
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <InputField
+                  label="OTP"
+                  placeholder="Enter 6-digit OTP"
+                  value={forgotForm.otp}
+                  onChangeText={(v) => setForgotForm({ ...forgotForm, otp: v })}
+                  keyboardType="number-pad"
+                />
+                <InputField
+                  label="New Password"
+                  placeholder="Create new password"
+                  value={forgotForm.newPassword}
+                  onChangeText={(v) => setForgotForm({ ...forgotForm, newPassword: v })}
+                  secureTextEntry
+                />
+                <InputField
+                  label="Confirm Password"
+                  placeholder="Re-enter new password"
+                  value={forgotForm.confirmPassword}
+                  onChangeText={(v) => setForgotForm({ ...forgotForm, confirmPassword: v })}
+                  secureTextEntry
+                />
+                <TouchableOpacity
+                  style={[styles.btn, loading && styles.btnDisabled]}
+                  onPress={handleResetPassword}
+                  disabled={loading}
+                  activeOpacity={0.85}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.btnText}>Reset Password</Text>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.forgotLinkCenter}
+                  onPress={() => { setForgotStep(1); }}
+                >
+                  <Text style={styles.forgotText}>Change number / Resend OTP</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </MotiView>
+        )}
 
         <TouchableOpacity
           onPress={() => navigation.navigate("HospitalRegister")}
@@ -661,28 +855,54 @@ export default function StaffLoginScreen({ navigation }) {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* ── Error Popup Modal ── */}
+      {/* ── Error/Success Popup Modal ── */}
       <Modal
         visible={popupVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setPopupVisible(false)}
+        onRequestClose={closePopup}
       >
         <View style={styles.overlay}>
           <View style={styles.popup}>
             {/* Icon */}
-            <View style={styles.popupIconWrap}>
-              <Ionicons name="close-circle" size={48} color="#EF4444" />
+            <View style={[
+              styles.popupIconWrap,
+              popupType === "success" && { backgroundColor: "#ECFDF5" },
+              popupType === "info" && { backgroundColor: "#EFF6FF" }
+            ]}>
+              <Ionicons
+                name={
+                  popupType === "success"
+                    ? "checkmark-circle"
+                    : popupType === "info"
+                    ? "information-circle"
+                    : "close-circle"
+                }
+                size={48}
+                color={
+                  popupType === "success"
+                    ? "#10B981"
+                    : popupType === "info"
+                    ? COLORS.staff
+                    : "#EF4444"
+                }
+              />
             </View>
 
-            <Text style={styles.popupTitle}>Login Failed</Text>
+            <Text style={styles.popupTitle}>{popupTitle}</Text>
             <Text style={styles.popupMessage}>{popupMessage}</Text>
 
             <Pressable
-              style={styles.popupBtn}
-              onPress={() => setPopupVisible(false)}
+              style={[
+                styles.popupBtn,
+                popupType === "success" && { backgroundColor: "#10B981" },
+                popupType === "info" && { backgroundColor: COLORS.staff }
+              ]}
+              onPress={closePopup}
             >
-              <Text style={styles.popupBtnText}>Try Again</Text>
+              <Text style={styles.popupBtnText}>
+                {popupType === "success" ? "Continue to Login" : "OK"}
+              </Text>
             </Pressable>
           </View>
         </View>
@@ -720,6 +940,48 @@ const styles = StyleSheet.create({
   btnText: { color: "#fff", fontWeight: "900", fontSize: 16 },
   registerLink: { marginTop: 20, alignItems: "center" },
   registerText: { color: COLORS.muted, fontSize: 14 },
+
+  // Forgot password styles
+  forgotLink: {
+    alignSelf: "flex-end",
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  forgotLinkCenter: {
+    alignSelf: "center",
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  forgotText: {
+    color: COLORS.staff,
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  cardHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    marginTop: 10,
+  },
+  smallBackBtn: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  titleSmall: {
+    fontSize: 20,
+    fontWeight: "900",
+    color: COLORS.text,
+  },
+  subSmall: {
+    fontSize: 13,
+    color: COLORS.muted,
+    marginTop: 3,
+  },
 
   // ── Popup ────────────────────────────────────────────────────────────────────
   overlay: {

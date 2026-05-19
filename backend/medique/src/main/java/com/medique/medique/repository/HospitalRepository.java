@@ -60,9 +60,13 @@ public interface HospitalRepository extends JpaRepository<Hospital, Long> {
 
     Optional<Hospital> findByEmail(String email);
 
+    Optional<Hospital> findByPhone(String phone);
+
     boolean existsByHospitalId(String hospitalId);
 
     boolean existsByEmail(String email);
+
+    boolean existsByPhone(String phone);
 
     List<Hospital> findByStatus(HospitalStatus status);
 }

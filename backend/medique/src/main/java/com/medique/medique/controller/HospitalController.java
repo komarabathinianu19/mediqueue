@@ -1085,11 +1085,14 @@ package com.medique.medique.controller;
 
 import com.medique.medique.dto.HospitalLoginRequest;
 import com.medique.medique.dto.HospitalRegisterRequest;
+import com.medique.medique.dto.SendOtpRequest;
+import com.medique.medique.dto.ResetPasswordRequest;
 import com.medique.medique.entity.Doctor;
 import com.medique.medique.entity.Hospital;
 import com.medique.medique.repository.DoctorRepository;
 import com.medique.medique.security.JwtUtil;
 import com.medique.medique.service.HospitalService;
+import com.medique.medique.service.TwilioOTPService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -1109,12 +1112,78 @@ public class HospitalController {
     private final HospitalService hospitalService;
     private final JwtUtil jwtUtil;
     private final DoctorRepository doctorRepository;
+    private final TwilioOTPService twilioOTPService;
 
-    public HospitalController(HospitalService hospitalService, JwtUtil jwtUtil, DoctorRepository doctorRepository) {
+    public HospitalController(HospitalService hospitalService, JwtUtil jwtUtil, DoctorRepository doctorRepository, TwilioOTPService twilioOTPService) {
         this.hospitalService = hospitalService;
         this.jwtUtil = jwtUtil;
         this.doctorRepository = doctorRepository;
+        this.twilioOTPService = twilioOTPService;
     }
+
+    // ── HOSPITAL FORGOT PASSWORD FLOW ──────────────────────────────────────────
+
+    @GetMapping("/check-phone")
+    public ResponseEntity<?> checkPhone(@RequestParam String phone) {
+        try {
+            String formattedPhone = phone.trim();
+            if (!formattedPhone.startsWith("+")) {
+                formattedPhone = "+91" + formattedPhone;
+            }
+            boolean registered = hospitalService.isPhoneRegistered(formattedPhone);
+            // Always return 200 OK — let the frontend read the "registered" boolean
+            return ResponseEntity.ok(Map.of("registered", registered));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/otp/send")
+    public ResponseEntity<?> sendOtp(@RequestBody SendOtpRequest req) {
+        try {
+            String phone = req.getPhone().trim();
+            if (!phone.startsWith("+")) {
+                phone = "+91" + phone;
+            }
+
+            boolean registered = hospitalService.isPhoneRegistered(phone);
+            if (!registered) {
+                return ResponseEntity.status(404)
+                        .body(Map.of("message", "This phone number is not registered."));
+            }
+
+            boolean sent = twilioOTPService.sendOTP(phone);
+            if (sent) {
+                return ResponseEntity.ok(Map.of("message", "OTP sent successfully."));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("message", "Unable to send OTP."));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest req) {
+        try {
+            String phone = req.getPhone().trim();
+            if (!phone.startsWith("+")) {
+                phone = "+91" + phone;
+            }
+
+            boolean isValid = twilioOTPService.verifyOTP(phone, req.getCode().trim());
+            if (!isValid) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Invalid or expired OTP code."));
+            }
+
+            hospitalService.resetPassword(phone, req.getNewPassword());
+            return ResponseEntity.ok(Map.of("message", "Password reset successful."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody HospitalRegisterRequest req) {

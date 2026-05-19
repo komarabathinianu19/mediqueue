@@ -1,27 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // package com.medique.medique.security;
 
 // import org.springframework.context.annotation.Bean;
@@ -121,41 +98,6 @@
 //     }
 // }  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // package com.medique.medique.security;
 
 // import org.springframework.context.annotation.Bean;
@@ -240,27 +182,6 @@
 //         return config.getAuthenticationManager();
 //     }
 // }  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // package com.medique.medique.security;
 
@@ -370,29 +291,6 @@
 //     }
 // }  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // package com.medique.medique.security;
 
 // import org.springframework.context.annotation.Bean;
@@ -496,28 +394,6 @@
 //         return config.getAuthenticationManager();
 //     }
 // }  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // package com.medique.medique.security;
 
@@ -627,37 +503,6 @@
 //     }
 // }  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // package com.medique.medique.security;
 
 // import org.springframework.context.annotation.Bean;
@@ -764,29 +609,6 @@
 //         return config.getAuthenticationManager();
 //     }
 // }  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // package com.medique.medique.security;
 
@@ -895,32 +717,6 @@
 //         return config.getAuthenticationManager();
 //     }
 // }  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // package com.medique.medique.security;
 
@@ -1033,18 +829,8 @@
 //     ) throws Exception {
 //         return config.getAuthenticationManager();
 //     } 
-    
+
 // }  
-
-
-
-
-
-
-
-
-
-
 
 package com.medique.medique.security;
 
@@ -1065,113 +851,115 @@ import org.springframework.http.HttpMethod;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
+        private final JwtAuthFilter jwtAuthFilter;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
-        this.jwtAuthFilter = jwtAuthFilter;
-    }
+        public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+                this.jwtAuthFilter = jwtAuthFilter;
+        }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http
-            .cors(cors -> {})
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session ->
-                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authorizeHttpRequests(auth -> auth
+                http
+                                .cors(cors -> {
+                                })
+                                .csrf(csrf -> csrf.disable())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(auth -> auth
 
-                    // ── PUBLIC: Patient auth ─────────────────────────────────
-                    .requestMatchers(HttpMethod.POST,
-                            "/api/auth/register",
-                            "/api/auth/login",
-                            "/api/auth/reset-password"
-                    ).permitAll()
+                                                // ── PUBLIC: Patient auth ─────────────────────────────────
+                                                .requestMatchers(HttpMethod.POST,
+                                                                "/api/auth/register",
+                                                                "/api/auth/login",
+                                                                "/api/auth/reset-password",
+                                                                "/api/auth/otp/send")
+                                                .permitAll()
 
-                    // ── PUBLIC: Check phone (GET) ────────────────────────────
-                    .requestMatchers(HttpMethod.GET,
-                            "/api/auth/check-phone"
-                    ).permitAll()
+                                                // ── PUBLIC: Check phone (GET) ────────────────────────────
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/auth/check-phone")
+                                                .permitAll()
 
-                    // ── PUBLIC: Hospital auth ────────────────────────────────
-                    .requestMatchers(
-                            "/api/hospitals/register",
-                            "/api/hospitals/login"
-                    ).permitAll()
+                                                // ── PUBLIC: Hospital auth ────────────────────────────────
+                                                .requestMatchers(
+                                                                "/api/hospitals/register",
+                                                                "/api/hospitals/login",
+                                                                "/api/hospitals/check-phone",
+                                                                "/api/hospitals/otp/send",
+                                                                "/api/hospitals/reset-password")
+                                                .permitAll()
 
-                    // ── PUBLIC: Admin ────────────────────────────────────────
-                    .requestMatchers("/api/admin/allTokens").permitAll()
+                                                // ── PUBLIC: Admin ────────────────────────────────────────
+                                                .requestMatchers("/api/admin/allTokens").permitAll()
 
-                    // ── PUBLIC: Hospital read ────────────────────────────────
-                    .requestMatchers(
-                            "/api/hospitals/approved",
-                            "/api/hospitals/pending",
-                            "/api/hospitals/all"
-                    ).permitAll()
+                                                // ── PUBLIC: Hospital read ────────────────────────────────
+                                                .requestMatchers(
+                                                                "/api/hospitals/approved",
+                                                                "/api/hospitals/pending",
+                                                                "/api/hospitals/all")
+                                                .permitAll()
 
-                    // ── PUBLIC: Single hospital + approve/reject ─────────────
-                    .requestMatchers(
-                            "/api/hospitals/*",
-                            "/api/hospitals/*/approve",
-                            "/api/hospitals/*/reject"
-                    ).permitAll()
+                                                // ── PUBLIC: Single hospital + approve/reject ─────────────
+                                                .requestMatchers(
+                                                                "/api/hospitals/*",
+                                                                "/api/hospitals/*/approve",
+                                                                "/api/hospitals/*/reject")
+                                                .permitAll()
 
-                    // ── PUBLIC: Hospital details ─────────────────────────────
-                    .requestMatchers("/api/hospitals/details").permitAll()
+                                                // ── PUBLIC: Hospital details ─────────────────────────────
+                                                .requestMatchers("/api/hospitals/details").permitAll()
 
-                    // ── PUBLIC: Doctors ──────────────────────────────────────
-                    .requestMatchers("/api/doctors/**").permitAll()
+                                                // ── PUBLIC: Doctors ──────────────────────────────────────
+                                                .requestMatchers("/api/doctors/**").permitAll()
 
-                    // ── PUBLIC: Departments ──────────────────────────────────
-                    .requestMatchers("/api/departments/**").permitAll()
+                                                // ── PUBLIC: Departments ──────────────────────────────────
+                                                .requestMatchers("/api/departments/**").permitAll()
 
-                    // ── PUBLIC: Queue (live status, no login needed) ─────────
-                    .requestMatchers(
-                            "/api/tokens/queue",
-                            "/api/tokens/summary",
-                            "/api/tokens/slot"
-                    ).permitAll()
+                                                // ── PUBLIC: Queue (live status, no login needed) ─────────
+                                                .requestMatchers(
+                                                                "/api/tokens/queue",
+                                                                "/api/tokens/summary",
+                                                                "/api/tokens/slot")
+                                                .permitAll()
 
-                    // ── PUBLIC: Token booking & patient token views ──────────
-                    // JWT is validated manually inside the controller via JwtUtil
-                    // so Spring Security does not need to enforce it here
-                    .requestMatchers(
-                            "/api/tokens/book",
-                            "/api/tokens/walkin",
-                            "/api/tokens/my",
-                            "/api/tokens/my/active",
-                            "/api/tokens/next",
-                            "/api/tokens/complete",
-                            "/api/tokens/skip"
-                    ).permitAll()
+                                                // ── PUBLIC: Token booking & patient token views ──────────
+                                                // JWT is validated manually inside the controller via JwtUtil
+                                                // so Spring Security does not need to enforce it here
+                                                .requestMatchers(
+                                                                "/api/tokens/book",
+                                                                "/api/tokens/walkin",
+                                                                "/api/tokens/my",
+                                                                "/api/tokens/my/active",
+                                                                "/api/tokens/next",
+                                                                "/api/tokens/complete",
+                                                                "/api/tokens/skip")
+                                                .permitAll()
 
-                    // ── PUBLIC: Feedback ─────────────────────────────────────
-                    .requestMatchers("/api/feedback/**").permitAll()
+                                                // ── PUBLIC: Feedback ─────────────────────────────────────
+                                                .requestMatchers("/api/feedback/**").permitAll()
 
-                    // ── PUBLIC: Patient Reports ──────────────────────────────
-                    .requestMatchers("/api/patient/reports/**").permitAll()
+                                                // ── PUBLIC: Patient Reports ──────────────────────────────
+                                                .requestMatchers("/api/patient/reports/**").permitAll()
 
-                    // ── PUBLIC: Payment ──────────────────────────────────────
-                    .requestMatchers("/api/payment/**").permitAll()
+                                                // ── PUBLIC: Payment ──────────────────────────────────────
+                                                .requestMatchers("/api/payment/**").permitAll()
 
-                    // ── EVERYTHING ELSE: requires valid JWT ──────────────────
-                    .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                                                // ── EVERYTHING ELSE: requires valid JWT ──────────────────
+                                                .anyRequest().authenticated())
+                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config
-    ) throws Exception {
-        return config.getAuthenticationManager();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(
+                        AuthenticationConfiguration config) throws Exception {
+                return config.getAuthenticationManager();
+        }
 }

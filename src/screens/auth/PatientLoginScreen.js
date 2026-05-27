@@ -198,7 +198,7 @@ export default function PatientLoginScreen({ navigation }) {
     try {
       const phoneNumber = forgotForm.phone.trim().startsWith("+")
         ? forgotForm.phone.trim()
-        : "+91" + forgotForm.phone.trim();
+        : "" + forgotForm.phone.trim();
 
       // ── Step 1: Send OTP through our secure Spring Boot backend ───────
       await sendBackendOtp(phoneNumber);
@@ -228,7 +228,7 @@ export default function PatientLoginScreen({ navigation }) {
     try {
       const phoneNumber = forgotForm.phone.trim().startsWith("+")
         ? forgotForm.phone.trim()
-        : "+91" + forgotForm.phone.trim();
+        : "" + forgotForm.phone.trim();
 
       // ── Step 2: Request backend to verify the OTP and reset password ────
       await resetUserPassword(phoneNumber, forgotForm.otp.trim(), forgotForm.newPassword);
@@ -300,7 +300,7 @@ export default function PatientLoginScreen({ navigation }) {
 
             <InputField
               label="Phone Number"
-              placeholder="+91 00000 00000"
+              placeholder=""
               value={loginForm.phone}
               onChangeText={(v) => updateLogin("phone", v)}
               keyboardType="phone-pad"
@@ -308,7 +308,7 @@ export default function PatientLoginScreen({ navigation }) {
             />
             <InputField
               label="Password"
-              placeholder="••••••••"
+              placeholder=""
               value={loginForm.password}
               onChangeText={(v) => updateLogin("password", v)}
               secureTextEntry
@@ -365,7 +365,7 @@ export default function PatientLoginScreen({ navigation }) {
 
             <Text style={styles.sectionTitle}>Personal Details</Text>
             <InputField label="Full Name" placeholder="Enter patient name" value={registerForm.name} onChangeText={(v) => updateRegister("name", v)} icon="person-outline" />
-            <InputField label="Phone Number" placeholder="+91 00000 00000" value={registerForm.phone} onChangeText={(v) => updateRegister("phone", v)} keyboardType="phone-pad" icon="call-outline" />
+            <InputField label="Phone Number" placeholder="" value={registerForm.phone} onChangeText={(v) => updateRegister("phone", v)} keyboardType="phone-pad" icon="call-outline" />
             <InputField label="Age" placeholder="Example: 28" value={registerForm.age} onChangeText={(v) => updateRegister("age", v)} keyboardType="number-pad" icon="calendar-outline" />
             <InputField label="Gender" placeholder="Male / Female / Other" value={registerForm.gender} onChangeText={(v) => updateRegister("gender", v)} icon="male-female-outline" />
             <InputField label="Blood Group" placeholder="Example: O+" value={registerForm.bloodGroup} onChangeText={(v) => updateRegister("bloodGroup", v)} icon="water-outline" />
@@ -423,7 +423,7 @@ export default function PatientLoginScreen({ navigation }) {
               <>
                 <InputField
                   label="Registered Phone Number"
-                  placeholder="+91 00000 00000"
+                  placeholder=""
                   value={forgotForm.phone}
                   onChangeText={(v) => updateForgot("phone", v)}
                   keyboardType="phone-pad"

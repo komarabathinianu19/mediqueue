@@ -17,4 +17,28 @@ public class HospitalRequest {
     private String licenseNo;           // ← frontend must send "licenseNo"
     private String departments;
     private Integer doctorCount;
-}
+}  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

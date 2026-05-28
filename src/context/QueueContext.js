@@ -467,15 +467,17 @@ const QueueContext = createContext(null);
 
 export const getTodayDate = () => new Date().toISOString().split("T")[0];
 
-// How often (ms) to re-fetch the active token in the background.
-const ACTIVE_TOKEN_POLL_MS = 3000;
+// ── Poll every 15s (not 3s) to avoid server spam ──────────────────────────
+const ACTIVE_TOKEN_POLL_MS = 15000;
+
+// Max consecutive errors before polling stops completely
+const MAX_CONSECUTIVE_ERRORS = 3;
 
 // Decode JWT payload without a library
 function decodeJwtUserId(token) {
   try {
     const payload = token.split(".")[1];
     const decoded = JSON.parse(atob(payload));
-    // Spring sets subject = userId (Long as string)
     return decoded.sub || null;
   } catch {
     return null;
@@ -488,22 +490,44 @@ export function QueueProvider({ children }) {
   const [queueCache, setQueueCache]         = useState({});
   const [loading, setLoading]               = useState(false);
 
-  // Track which user's data is currently loaded
-  const currentUserIdRef = useRef(null);
-  const pollIntervalRef  = useRef(null);
+  const currentUserIdRef    = useRef(null);
+  const pollIntervalRef     = useRef(null);
+  const consecutiveErrorRef = useRef(0); // ── Track consecutive errors ──
 
   // ── PATIENT: Fetch own active token ──────────────────────────────────────
   const loadMyActiveToken = useCallback(async () => {
     try {
-      // Only fetch if a patient JWT is stored
       const jwt = await AsyncStorage.getItem("token");
       if (!jwt) return null;
 
       const token = await fetchMyActiveToken();
+
+      // ── Reset error count on success ──
+      consecutiveErrorRef.current = 0;
+
       setMyActiveToken(token);
       return token;
     } catch (err) {
-      console.error("loadMyActiveToken:", err.message);
+      // ── Increment error count; stop polling after MAX_CONSECUTIVE_ERRORS ──
+      consecutiveErrorRef.current += 1;
+
+      if (consecutiveErrorRef.current >= MAX_CONSECUTIVE_ERRORS) {
+        // Stop the interval to prevent endless server spam
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
+        console.warn(
+          `loadMyActiveToken: Stopped polling after ${MAX_CONSECUTIVE_ERRORS} consecutive errors. ` +
+          `Last error: ${err.message}`
+        );
+      } else {
+        // Log only once per error, not every 3 seconds
+        console.warn(
+          `loadMyActiveToken: Error ${consecutiveErrorRef.current}/${MAX_CONSECUTIVE_ERRORS} — ${err.message}`
+        );
+      }
+
       return null;
     }
   }, []);
@@ -514,11 +538,19 @@ export function QueueProvider({ children }) {
     if (pollIntervalRef.current) {
       clearInterval(pollIntervalRef.current);
     }
-    // Fetch immediately for this user
+
+    // Reset error count when starting fresh
+    consecutiveErrorRef.current = 0;
+
+    // Fetch immediately
     loadMyActiveToken();
-    // Then poll every 10s
+
+    // Then poll every ACTIVE_TOKEN_POLL_MS
     pollIntervalRef.current = setInterval(() => {
-      loadMyActiveToken();
+      // Don't fire if polling was already stopped due to errors
+      if (pollIntervalRef.current) {
+        loadMyActiveToken();
+      }
     }, ACTIVE_TOKEN_POLL_MS);
   }, [loadMyActiveToken]);
 
@@ -528,6 +560,7 @@ export function QueueProvider({ children }) {
       clearInterval(pollIntervalRef.current);
       pollIntervalRef.current = null;
     }
+    consecutiveErrorRef.current = 0;
   }, []);
 
   // ── Called on login: switch to new user's context ─────────────────────────

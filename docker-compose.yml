@@ -1,0 +1,72 @@
+version: '3.9'
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass123
+      MYSQL_DATABASE: mediqueue_db
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: satya
+
+    ports:
+      - "3306:3306"
+
+    volumes:
+      - db-data:/var/lib/mysql
+
+    networks:
+      - app-net
+
+    restart: unless-stopped
+
+
+  springboot:
+    build:
+      context: ./backend/medique
+
+    container_name: springboot
+
+    env_file:
+      - .env
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      - mysql
+
+    networks:
+      - app-net
+
+    restart: unless-stopped
+
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+
+    ports:
+      - "80:80"
+
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+
+    depends_on:
+      - springboot
+
+    networks:
+      - app-net
+
+    restart: unless-stopped
+
+
+volumes:
+  db-data:
+
+
+networks:
+  app-net:

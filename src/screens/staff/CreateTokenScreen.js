@@ -4,59 +4,6 @@
 
 
 // import React, { useEffect, useMemo, useState, useCallback } from "react";
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   ScrollView,
-//   TextInput,
-//   TouchableOpacity,
-//   Alert,
-//   Modal,
-//   Pressable,
-//   Linking,
-//   Platform,
-//   ActivityIndicator,
-// } from "react-native";
-// import { Ionicons } from "@expo/vector-icons";
-// import { MotiView } from "moti";
-// import { COLORS } from "../../constants/colors";
-// import { useQueue } from "../../context/QueueContext";
-// import { useHospital } from "../../context/HospitalContext";
-// import { fetchHospitalDayTokens } from "../../services/apiService";
-// import { useFocusEffect } from "@react-navigation/native";
-
-// const getTodayDate = () => new Date().toISOString().split("T")[0];
-
-// const STAFF_COLOR = COLORS.staff || "#14A39A";
-// const BG_COLOR = COLORS.background || "#F8FAFC";
-// const CARD_COLOR = COLORS.card || "#FFFFFF";
-// const TEXT_COLOR = COLORS.text || "#0F172A";
-// const MUTED_COLOR = COLORS.muted || "#64748B";
-// const BORDER_COLOR = COLORS.border || "#E2E8F0";
-// const DANGER_COLOR = COLORS.danger || "#EF4444";
-
-// const defaultTimings = {
-//   morning: { label: "Morning", enabled: true, startTime: "09:00 AM", endTime: "12:00 PM", maxPatients: 30 },
-//   afternoon: { label: "Afternoon", enabled: true, startTime: "01:00 PM", endTime: "04:00 PM", maxPatients: 25 },
-//   night: { label: "Night", enabled: true, startTime: "06:00 PM", endTime: "09:00 PM", maxPatients: 20 },
-// };
-
-// export default function CreateTokenScreen({ navigation }) {
-//   const { bookWalkIn } = useQueue();
-//   const { staffHospitalData, refreshDoctors } = useHospital();
-
-//   // Refresh doctor list every time this screen is focused
-//   useFocusEffect(
-//     useCallback(() => {
-//       if (staffHospitalData?.hospitalId) {
-//         refreshDoctors(staffHospitalData.hospitalId);
-//       }
-//     }, [staffHospitalData?.hospitalId])
-//   );
-
-  
-//   const [tokens, setTokens] = useState([]);
 //   const [loading, setLoading] = useState(false);
 //   const [department, setDepartment] = useState("");
 //   const [selectedDoctorId, setSelectedDoctorId] = useState("");
@@ -3873,11 +3820,6 @@
 
 
 
-
-
-
-
-
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   View,
@@ -4065,21 +4007,31 @@ export default function CreateTokenScreen({ navigation }) {
     }
   };
 
+  // ── FIX: WhatsApp via https://wa.me/ — works on Android & iOS without any config ──
   const shareTokenToPatient = async () => {
     if (!createdToken.patientPhone) {
       Alert.alert("Phone Missing", "Enter patient phone number to share.");
       return;
     }
-    const message = `Hello ${createdToken.patientName},\n\nYour Walk-in Token for ${createdToken.doctorName} (${createdToken.department}) is confirmed.\n\nToken No: ${createdToken.tokenNo}\nSlot: ${createdToken.slotLabel}\n\nThank you!`;
-    const url = `whatsapp://send?phone=91${createdToken.patientPhone}&text=${encodeURIComponent(message)}`;
-    
-    try {
-      const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) await Linking.openURL(url);
-      else await Linking.openURL(`sms:${createdToken.patientPhone}${Platform.OS === 'ios' ? '&' : '?'}body=${encodeURIComponent(message)}`);
-    } catch (e) {
-      Alert.alert("Error", "Could not open messaging app.");
-    }
+
+    const message =
+      `Hello ${createdToken.patientName},\n\n` +
+      `Your Walk-in Token for ${createdToken.doctorName} (${createdToken.department}) is confirmed.\n\n` +
+      `Token No: ${createdToken.tokenNo}\n` +
+      `Slot: ${createdToken.slotLabel}\n\n` +
+      `Thank you!`;
+
+    const cleanPhone = createdToken.patientPhone.replace(/[\s\-]/g, "");
+    const phoneWithCC = cleanPhone.startsWith("91") ? cleanPhone : `91${cleanPhone}`;
+    const encoded = encodeURIComponent(message);
+
+    await Linking.openURL(`https://wa.me/${phoneWithCC}?text=${encoded}`).catch(() => {
+      Linking.openURL(
+        Platform.OS === "ios"
+          ? `sms:${createdToken.patientPhone}&body=${encoded}`
+          : `sms:${createdToken.patientPhone}?body=${encoded}`
+      ).catch(() => Alert.alert("Error", "Could not open WhatsApp or SMS."));
+    });
   };
 
   if (loading && tokens.length === 0) {
@@ -4155,7 +4107,7 @@ export default function CreateTokenScreen({ navigation }) {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Success Modal remains similar but using createdToken state */}
+      {/* Success Modal */}
       <Modal visible={successPopup} transparent animationType="fade">
           <View style={styles.modalOverlay}>
              <MotiView from={{scale:0.9}} animate={{scale:1}} style={styles.successCard}>
@@ -4725,3 +4677,4 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
 });
+

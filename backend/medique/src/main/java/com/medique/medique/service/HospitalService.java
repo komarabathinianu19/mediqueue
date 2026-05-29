@@ -429,6 +429,14 @@ public class HospitalService {
         if (req.getLicenseNumber() == null || req.getLicenseNumber().isBlank()) throw new RuntimeException("License number is required.");
         if (hospitalRepo.existsByEmail(req.getEmail()))                   throw new RuntimeException("Email already registered.");
 
+        String normalizedPhone = normalizePhone(req.getPhone());
+
+        if (hospitalRepo.findFirstByPhone(req.getPhone()).isPresent()
+                || hospitalRepo.findFirstByPhone(normalizedPhone).isPresent()
+                || hospitalRepo.findFirstByPhone("+91" + normalizedPhone).isPresent()) {
+            throw new RuntimeException("Phone number already registered.");
+        }
+
         Hospital hospital = new Hospital();
         hospital.setHospitalId(generateUniqueHospitalId());
         hospital.setName(req.getName());

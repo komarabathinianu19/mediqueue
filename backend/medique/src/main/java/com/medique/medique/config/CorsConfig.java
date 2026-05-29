@@ -10,28 +10,18 @@ import org.springframework.web.filter.CorsFilter;
 @Configuration
 public class CorsConfig {
 
-    // ✅ This bean is used by Spring Security (.cors(cors -> cors.configurationSource(...)))
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowCredentials(true);
+        // ✅ Allow all origins (works for mobile apps, browsers, Expo, Postman)
+        config.addAllowedOriginPattern("*");
 
-        // ── Localhost ports ──────────────────────────────────────────────────
-        config.addAllowedOrigin("http://localhost:8080");
-        config.addAllowedOrigin("http://localhost:8081");
-        config.addAllowedOrigin("http://localhost:8082"); // ✅ your web frontend
-        config.addAllowedOrigin("http://localhost:8083");
-        config.addAllowedOrigin("http://localhost:19006"); // Expo web default
+        // ✅ Must be false when using wildcard "*" pattern
+        // JWT is sent via Authorization header, not cookies — so this is fine
+        config.setAllowCredentials(false);
 
-        // ── LAN — covers any 192.168.x.x device/port ────────────────────────
-        config.addAllowedOriginPattern("http://192.168.*.*");
-        config.addAllowedOriginPattern("http://192.168.*.*:*"); // ✅ with port
-
-        // ── Expo tunnel URLs ─────────────────────────────────────────────────
-        config.addAllowedOriginPattern("https://*.exp.direct");
-        config.addAllowedOriginPattern("http://*.exp.direct");
-
+        // ✅ Allow all headers and methods
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
 
@@ -40,7 +30,7 @@ public class CorsConfig {
         return source;
     }
 
-    // ✅ Keep CorsFilter too — handles CORS before Spring Security kicks in
+    // ✅ Handles CORS before Spring Security kicks in
     @Bean
     public CorsFilter corsFilter() {
         return new CorsFilter(corsConfigurationSource());

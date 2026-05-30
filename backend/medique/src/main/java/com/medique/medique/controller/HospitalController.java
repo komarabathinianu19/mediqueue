@@ -3,6 +3,7 @@ package com.medique.medique.controller;
 import com.medique.medique.entity.Doctor;
 import com.medique.medique.entity.Hospital;
 import com.medique.medique.service.DoctorService;
+import com.medique.medique.service.JwtService;
 import com.medique.medique.dto.HospitalRegisterRequest;
 import com.medique.medique.service.HospitalService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,12 +23,15 @@ public class HospitalController {
     @Autowired
     private DoctorService doctorService;
 
+    @Autowired
+    private JwtService jwtService;
+
     // ------------------- API Endpoints -------------------
 
     // Get all approved hospitals
     @GetMapping("/approved")
     public ResponseEntity<List<Map<String, Object>>> getApprovedHospitals() {
-        List<Hospital> hospitals = hospitalService.getApproved(); // updated to match your service
+        List<Hospital> hospitals = hospitalService.getApproved();
         List<Map<String, Object>> result = hospitals.stream()
                 .map(this::toPublicMap)
                 .collect(Collectors.toList());
@@ -66,10 +70,12 @@ public class HospitalController {
             String password = body.get("password");
 
             Hospital hospital = hospitalService.loginStaff(hospitalId, phone, password);
+            String token = jwtService.generateToken(hospital.getId(), "HOSPITAL");
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Login successful");
+            response.put("token", token);
             response.put("hospitalId", hospital.getHospitalId());
             response.put("name", hospital.getName());
             response.put("phone", hospital.getPhone());
